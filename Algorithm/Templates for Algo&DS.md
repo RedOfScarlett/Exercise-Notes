@@ -1276,3 +1276,135 @@ for(int l=2;l<=n;l++){
 
 ### 状态压缩
 
+### LeetCode
+
+#### 一维DP
+
+##### 152.乘积最大子数组
+
+```C++
+class Solution {
+public:
+    int maxProduct(vector<int>& nums) {
+        int sz=nums.size();
+        vector<int> dp1(sz,0);//以nums[i]结尾时的最大乘积
+        vector<int> dp2(sz,0);//以nums[i]结尾时的最小乘积，即保存负的最大值，应对nums[i+1]<0的情况
+        dp1[0]=nums[0];
+        dp2[0]=nums[0];
+        for(int i=1;i<sz;i++){
+            dp1[i]=max({nums[i]*dp1[i-1],nums[i]*dp2[i-1],nums[i]});//std:max()可以接受一个list
+            dp2[i]=min({nums[i]*dp1[i-1],nums[i]*dp2[i-1],nums[i]});
+        }
+        return *max_element(dp1.begin(),dp1.end());
+    }
+};
+```
+
+##### 53.最大子数组和
+
+```c++
+//标准的dp
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        int sz=nums.size();
+        vector<int> dp(sz,0);
+        dp[0]=nums[0];
+        for(int i=1;i<sz;i++){
+            dp[i]=max(dp[i-1]+nums[i],nums[i]);
+        }
+        return *max_element(dp.begin(),dp.end());
+    }
+};
+
+//dp数组可以进一步压缩
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        int res = INT_MIN, curSum = 0;
+        for (int num : nums) 
+        {
+            curSum = max(curSum + num, num);
+            res = max(res, curSum);
+        }
+        return res; 
+    }
+};
+```
+
+
+
+## 贪心
+
+### LeetCode
+
+##### 45.跳跃游戏Ⅱ
+
+```C++
+class Solution {
+public:
+    int jump(vector<int>& nums) {
+        int n=nums.size();
+        int end=0;
+        int farthest=0;
+        int jumps=0;
+        for(int i=0;i<n-1;i++){
+            farthest=max(nums[i]+i,farthest);//更新从i位置可以达到的最远位置
+            //该位置可以从上一次跳跃达到的最远位置再跳一次达到则jumps++
+            if(end==i){
+                jumps++;
+                end=farthest;//更新可达的最远位置
+                if (farthest >= n - 1) 
+                    break;
+            }
+        }
+        return jumps;
+    }
+};
+```
+
+##### 55.跳跃游戏
+
+```C++
+//同时更新上一跳可达最远距离和判断当前位置是否可达
+class Solution {
+public:
+    bool canJump(vector<int>& nums) {
+        int n=nums.size();
+        int farthest=0;
+        for(int i=0;i<n-1;i++){
+            farthest=max(farthest,i+nums[i]);//更新可达的最远距离，代表进行了一次跳跃
+            //上一跳可达的最远距离小于等于当前数组下标代表当前位置不可达
+            if(farthest<=i)
+                return false;
+        }
+        return true;
+    }
+};
+```
+
+## 滑动窗口
+
+#### Leetcode
+
+##### 209. 长度最小的子数组
+
+```C++
+class Solution {
+public:
+    int minSubArrayLen(int target, vector<int>& nums) {
+        int i=0;//滑动窗口左边界
+        int sum=0;//维护滑动窗口内数组和
+        int len=0;//维护最短长度
+        for(int j=0;j<nums.size();j++){
+            sum+=nums[j];
+            while(sum>=target){
+                len=len==0?j-i+1:min(len,j-i+1);
+                sum-=nums[i++];
+            }
+        }
+        return len;
+    }
+};
+```
+
