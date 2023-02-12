@@ -1276,6 +1276,10 @@ for(int l=2;l<=n;l++){
 
 ### 状态压缩
 
+#### 无后效性
+
+为了保证计算子问题能够按照顺序、不重复地进行，动态规划要求已经求解的子问题不受后续阶段的影响。动态规划对状态空间的遍历构成一张有向无环图，遍历就是该有向无环图的一个拓扑序。有向无环图中的节点对应问题中的「状态」，图中的边则对应状态之间的「转移」，转移的选取就是动态规划中的「决策」。
+
 ### LeetCode
 
 #### 一维DP
@@ -1292,7 +1296,7 @@ public:
         dp1[0]=nums[0];
         dp2[0]=nums[0];
         for(int i=1;i<sz;i++){
-            dp1[i]=max({nums[i]*dp1[i-1],nums[i]*dp2[i-1],nums[i]});//std:max()可以接受一个list
+            dp1[i]=max({nums[i]*dp1[i-1],nums[i]*dp2[i-1],nums[i]});//std:max()可以接受一个std::initializer_list
             dp2[i]=min({nums[i]*dp1[i-1],nums[i]*dp2[i-1],nums[i]});
         }
         return *max_element(dp1.begin(),dp1.end());
@@ -1399,7 +1403,7 @@ public:
         for(int j=0;j<nums.size();j++){
             sum+=nums[j];
             while(sum>=target){
-                len=len==0?j-i+1:min(len,j-i+1);
+                len=len==0?j-i+1:min(len,j-i+1);//炫技，为了处理掉第一次len为0的情况
                 sum-=nums[i++];
             }
         }
