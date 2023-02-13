@@ -53,7 +53,7 @@ void inOrder(node* root){
 }
 ```
 
-#### 后续
+#### 后序
 
 ```C++
 //后序的逆序与先序对称
@@ -401,6 +401,115 @@ node* create(int data[],int n){
 }
 ```
 
+## 线段树
+
+线段树是一种二叉树，每个叶子结点存储元素本身，非叶子节点存储区间内元素的统计值（区间和、区间最值、区间最大公约数等），可以在logn时间内执行区间修改和区间查询。
+
+![image-20230213095421001](Templates for Algo&DS.assets/image-20230213095421001.png)
+
+```c++
+//root下标从1开始
+#define lc root<<1
+#define rc root<<1|1
+
+class Node {
+public:
+    int l, r;//维护区间左右端点，为闭区间
+    int sum;//叶子节点存储本身值，非叶子节点存储统计值
+    int add;//lazy标记
+    Node(int ls=0,int rs=0, int value=0, int lazy=0)
+        :l(ls),r(rs),sum(value),add(lazy)
+        {}
+}tr[N<<2];//可以看作一个完全二叉树最多多一层，可以用四倍于数据量的数组存储
+
+```
+
+### 构造SegmentTree
+
+```C++
+//以维护区间和线段树为例
+
+void pushUp(int root) {
+//上传到根节点就是令节点的val等于左右节点val之和
+	tr[root].sum=tr[lc].sum+tr[rc].sum;
+}
+
+void pushDown(int root) {
+//如果Lazy没有被标记，就直接返回，否则要更新节点值，以及左右子节点的lazy值，并将当前节点的lazy值清空
+    if (!tr[root].add) {
+        return;
+    }else{
+    	tr[lc].sum+=(tr[lc].r-tr[lc].l+1)*tr[root].add;
+        tr[rc].sum+=(tr[rc].r-tr[rc].l+1)*tr[root].add;
+        
+        tr[lc].add+=tr[root].add;
+        tr[rc].add+=tr[root].add;
+        
+        tr[root].add=0;
+    }
+}
+
+//递归建树 O(logn)
+void build(int root,int l,int r){
+    tr[root]={l,r,w[l],0};
+    if(l==r)//是叶子则返回
+        return;
+    int mid=l+r>>2;//不是叶子则从区间中点裂开；
+    build(lc,l,m);
+    build(rc,m+1,r);
+    pushUp(root);//回溯，维护非叶节点
+}
+```
+
+### 区间修改
+
+```C++
+//采用懒惰修改, O(logn)
+void update(int root,int x, int y, int k){
+    //修改维护区间，则修改
+    if(tr[root].l>=x && tr[root].r<=y){
+        tr[root].sum+=(tr[root].r-tr[root].l+1)*k;
+        tr[root].add+=k;//懒惰修改
+        return;
+    }
+    int mid=tr[p].l+tr[p].r>>1;//不覆盖则裂开
+    pushDown(root);
+    if(x<=mid)
+        update(lc,x,y,k);
+    if(y>mid)
+        update(rc,x,y,k);
+    pushUp(root);
+}
+```
+
+### 区间查询
+
+```C++
+//O(logn)
+int query(int root, int x, int y){
+    if(tr[root].l>=x&&tr[root].r<=y)
+        return tr[root].sum;//节点维护区间是查询区间的子区间则返回sum
+    int mid=tr[root],l+tr[root].r>>1;//不覆盖则裂开
+    pushDown(p);
+    int sum=0;
+    if(x<=mid)
+        sum+=query(lc,x,y);
+    if(y>mid)
+     	sum+=query(rc,x,y);
+    return sum;
+}
+```
+
+### LeetCode
+
+##### 732. 我的日程安排表Ⅲ
+
+```c++
+
+```
+
+
+
 ## 堆
 
 一种完全二叉树，不稳定排序
@@ -525,6 +634,8 @@ int WPL(int A[],int n){//A中存放所有带权节点
 //一个串中每个字符的使用频率就是该字符作为叶子结点的权值，使用频率越高，该字符编码就越短，这样起到压缩的作用
 //哈夫曼编码是能使字符串编码成01串后长度最短的前缀编码
 ```
+
+
 
 ## 图
 
