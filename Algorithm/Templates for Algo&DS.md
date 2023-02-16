@@ -415,8 +415,8 @@ node* create(int data[],int n){
 class Node {
 public:
     int l, r;//维护区间左右端点，为闭区间
-    int sum;//叶子节点存储本身值，非叶子节点存储统计值
-    int add;//lazy标记
+    int sum;//叶子节点存储本身值，非叶子节点存储统计值，此处为区间和
+    int add;//lazy标记，懒惰修改，只修改对查询有用的节点
     Node(int ls=0,int rs=0, int value=0, int lazy=0)
         :l(ls),r(rs),sum(value),add(lazy)
         {}
@@ -432,21 +432,6 @@ public:
 void pushUp(int root) {
 //上传到根节点就是令节点的val等于左右节点val之和
 	tr[root].sum=tr[lc].sum+tr[rc].sum;
-}
-
-void pushDown(int root) {
-//如果Lazy没有被标记，就直接返回，否则要更新节点值，以及左右子节点的lazy值，并将当前节点的lazy值清空
-    if (!tr[root].add) {
-        return;
-    }else{
-    	tr[lc].sum+=(tr[lc].r-tr[lc].l+1)*tr[root].add;
-        tr[rc].sum+=(tr[rc].r-tr[rc].l+1)*tr[root].add;
-        
-        tr[lc].add+=tr[root].add;
-        tr[rc].add+=tr[root].add;
-        
-        tr[root].add=0;
-    }
 }
 
 //递归建树 O(logn)
@@ -465,11 +450,29 @@ void build(int root,int l,int r){
 
 ```C++
 //采用懒惰修改, O(logn)
+
+void pushDown(int root) {
+//如果Lazy没有被标记，就直接返回，否则要更新节点值，以及左右子节点的lazy值，并将当前节点的lazy值清空
+    if (!tr[root].add) {
+        return;
+    }else{
+        //维护统计量
+    	tr[lc].sum+=(tr[lc].r-tr[lc].l+1)*tr[root].add;
+        tr[rc].sum+=(tr[rc].r-tr[rc].l+1)*tr[root].add;
+        
+        //标记下放
+        tr[lc].add+=tr[root].add;
+        tr[rc].add+=tr[root].add;
+        
+        tr[root].add=0;
+    }
+}
+
 void update(int root,int x, int y, int k){
-    //修改维护区间，则修改
+    //覆盖维护区间，则修改
     if(tr[root].l>=x && tr[root].r<=y){
         tr[root].sum+=(tr[root].r-tr[root].l+1)*k;
-        tr[root].add+=k;//懒惰修改
+        tr[root].add+=k;//懒惰修改，k为增加量
         return;
     }
     int mid=tr[p].l+tr[p].r>>1;//不覆盖则裂开
@@ -505,7 +508,94 @@ int query(int root, int x, int y){
 ##### 732. 我的日程安排表Ⅲ
 
 ```c++
+//线段树动态开点法模板
 
+class MyCalendarThree {
+public:
+    int N=1e9;
+
+    class Node{
+    public:
+        Node *left,*right;
+        int l,r;
+        int maxRepeat;
+        int add;//lazy tag
+        Node(int start,int end)
+            :left(nullptr),
+            right(nullptr),
+            l(start),
+            r(end),
+            maxRepeat(0),
+            add(0){}
+    };
+
+    Node *root=new Node(0,N);
+
+    void pushUp(Node *p){
+        p->maxRepeat=max(p->left->maxRepeat,p->right->maxRepeat);
+    }
+
+    void pushDown(Node *p){
+
+        int mid = (p->l+p->r)>>1;
+        if(p->left==nullptr) 
+            p->left = new Node(p->l,mid);
+        if(p->right==nullptr) 
+            p->right = new Node(mid+1,p->r);
+        if(p->add==0) 
+            return;
+
+        p->left->add += p->add;
+        p->right->add += p->add;
+        p->left->maxRepeat += p->add;
+        p->right->maxRepeat += p->add;
+        p->add = 0;
+    }
+
+    void update(Node *p, int l,int r){
+        if(l<=p->l&&r>=p->r){
+            p->maxRepeat+=1;
+            p->add+=1;
+            return;
+        }
+        pushDown(p);
+        int mid=(p->l+p->r)>>1;
+        if(mid>=l)
+            update(p->left,l,r);
+        if(mid<r)
+            update(p->right,l,r);
+        pushUp(p);
+    }
+  
+    int book(int startTime, int endTime) {
+        update(root,startTime,endTime-1);
+        return root->maxRepeat;
+    }
+};
+
+```
+
+```C++
+//差分数组法：一种辅助数组，记录原始数组相邻元素之间的差，即原数组中第i个位置值减去原数组第i-1个位置的值。假设我们频繁的对数组进行范围更新，则只需要更新端点即可。
+
+class MyCalendarThree {
+public:
+    map<int,int> cnt;
+    MyCalendarThree() {
+
+    }
+    
+    int book(int startTime, int endTime) {
+        cnt[startTime]++;
+        cnt[endTime]--;
+        int ans=0;
+        int maxBook=0;
+        for(auto &c:cnt){
+            ans=max(ans,maxBook+=c.second);// 所有[startTime，endTime)的嵌套层数
+        }
+        return ans;
+    }
+};
 ```
 
 
@@ -1443,6 +1533,34 @@ public:
             res = max(res, curSum);
         }
         return res; 
+    }
+};
+```
+
+##### 918. 环形子数组的最大和
+
+```C++
+/*
+1.最大子数组 不成环 --- 53题 也就是maxSum为答案
+2.最大子数组 成环 ，因为total一定，而subSum=maxSum，且maxSum的两端必为正数，所以中间的不成环子数组就是最小子数组minSum，那么(total - minSum) 则为答案
+*/
+
+class Solution {
+public:
+    int maxSubarraySumCircular(vector<int>& nums) {
+        int total=0;
+        int minSum=INT_MAX;
+        int maxSum=INT_MIN;
+        int curMax=0,curMin=0;
+        for(auto &i:nums){
+            curMax=max(i,curMax+i);
+            curMin=min(i,curMin+i);
+            maxSum=max(maxSum,curMax);
+            minSum=min(minSum,curMin);
+            total+=i;
+        }
+        //判断一下数组全负的情况
+        return maxSum>0?max(maxSum,total-minSum):maxSum;
     }
 };
 ```
