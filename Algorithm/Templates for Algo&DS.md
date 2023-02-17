@@ -1094,7 +1094,7 @@ void topologicalSort(){//打印
 
 所有单调线性表都可以利用“二分”思想
 
-#### 递归算法
+#### 递归写法
 
 ```c++
 //二分查找值为x的节点
@@ -1113,7 +1113,7 @@ int binarySearchRecursion(int A[],int left,int right,int x){
 }
 ```
 
-#### 非递归算法
+#### 非递归写法
 
 ```c++
 int binarySearch(int A[],int left,int right,int x){
@@ -1134,6 +1134,7 @@ int binarySearch(int A[],int left,int right,int x){
 ### 下界
 
 ```c++
+//x为下界即x应该在一个递增子序列的开始位置
 //返回递增序列第一个大于等于x的元素的位置（假设x不存在，那么返回的是x应在的位置）
 int lowerBound(int A[],int left,int right,int x){
 	int mid;
@@ -1151,6 +1152,7 @@ int lowerBound(int A[],int left,int right,int x){
 ### 上界
 
 ```C++
+//x为上界即x应该在一个递增子序列的最后一个元素右边一个位置（左闭右开）
 //返回递增序列第一个大于x的元素的位置（假设x不存在，那么返回的是x应在的位置）
 int upperBound(int A[],int left,int right,int x){
 	int mid;
@@ -1561,6 +1563,176 @@ public:
         }
         //判断一下数组全负的情况
         return maxSum>0?max(maxSum,total-minSum):maxSum;
+    }
+};
+```
+
+##### 198.打家劫舍（剑指 Offer II 089. 房屋偷盗)
+
+```c++
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        int sz=nums.size();
+        if(sz==0)
+            return 0;
+        if(sz==1)
+            return nums[0];
+        vector<int> dp(sz,0);//dp[i]为前i个房子能盗窃到的最高金额
+        dp[0]=nums[0];
+        dp[1]=max(nums[0],nums[1]);
+        for(int i=2;i<sz;i++){
+            dp[i]=max(dp[i-2]+nums[i],dp[i-1]);
+        }
+        return dp[sz-1];
+    }
+};
+
+//状态压缩
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        int sz=nums.size();
+        int dp1=0,dp2=0;//dp前两个位置
+        int dp=0;
+        for(int i=0;i<sz;i++){//对原数组每一个位置进行遍历
+            dp=max(dp2,nums[i]+dp1);
+            dp1=dp2;
+            dp2=dp;
+        }
+        return dp;
+    }
+};
+```
+
+##### 213.打家劫舍Ⅱ（剑指 Offer II 090. 环形房屋偷盗)
+
+```C++
+//环形打家劫舍
+//第一间和最后一间不能同时被抢，所以分抢第一间和抢最后一间两种情况做两次dp取最大值即可
+
+class Solution {
+public:
+    int robRange(vector<int>& nums,int start,int end) {
+        //int sz=nums.size();
+        int dp1=0,dp2=0;//dp前两个位置
+        int dp=0;
+        for(int i=start;i<end+1;i++){//对[start,end]每一个位置进行遍历
+            dp=max(dp2,nums[i]+dp1);
+            dp1=dp2;
+            dp2=dp;
+        }
+        return dp;
+    }
+    int rob(vector<int>& nums) {
+        int sz=nums.size();
+        if(sz==0)
+            return 0;
+        if(sz==1)
+            return nums[0];
+        return max(robRange(nums,0,sz-2),robRange(nums,1,sz-1));
+    }
+};
+```
+
+##### 337.打家劫舍Ⅲ
+
+```c++
+//树形打家劫舍
+//树形dp，状态压缩
+
+class Solution {
+public:
+    int rob(TreeNode* root) {
+        int l=0,r=0;
+        return robTree(root,l,r);
+    }
+    //包含根节点则根节点的两个孩子不能偷，不包含根节点则两个孩子可以偷，两种情况取最大值
+    int robTree(TreeNode* root, int &l,int &r){//l和r必须是引用，因为是作为dp依赖的两个状态，不应该在递归中被刷新
+        if(!root)
+            return 0;
+        int ll=0,lr=0,rl=0,rr=0;//分别保存左左、左右、右左、右右孩子的最高金额
+        l=robTree(root->left,ll,lr);
+        r=robTree(root->right,rl,rr);
+        return max(root->val+ll+lr+rl+rr,l+r);
+    }
+};
+```
+
+##### 300.最长递增子序列
+
+```c++
+//dp
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        int sz=nums.size();
+        vector<int> dp(sz,1);//前i个数中的最长递增子序列长度为dp[i],每个数单独成一个序列，所以初始长度为1
+        for(int i=0;i<sz;i++){
+            for(int j=0;j<i;j++){//单调，可用二分查找优化
+                if(nums[i]>nums[j])
+                    dp[i]=max(dp[i],dp[j]+1);
+            }
+        }
+        return *max_element(dp.begin(),dp.end());
+    }
+};
+
+//二分优化，类似摸牌，摸到大的就接在后面，摸到小的就替换掉其应插入位置的牌，保持手牌单增且尽量小
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        int sz=nums.size();
+        vector<int> LIS(sz);//手牌
+        int idx=0;
+        for(int i=0;i<sz;i++){
+            int poker=nums[i];//摸一张牌
+            int left=0,right=idx,mid;
+            while(left<right){//二分查找
+                mid=left+(right-left)/2;
+                if(poker<=LIS[mid])
+                    right=mid;
+                else
+                    left=mid+1;
+            }
+            if(left==idx)//新牌最大
+                idx++;//接在手牌后面
+            LIS[left]=poker;//替换该位置的牌
+        }
+        return idx;
+    }
+};
+```
+
+##### 354.俄罗斯信封套娃问题
+
+```c++
+//并不是维护一个二维都递增的序列
+
+class Solution {
+public:
+    int maxEnvelopes(vector<vector<int>>& envelopes) {
+        int len=envelopes.size(); 
+        sort(envelopes.begin(), envelopes.end(), [](const auto& e1, const auto& e2) {
+            return e1[0] < e2[0] || (e1[0] == e2[0] && e1[1] > e2[1]);
+        });
+        int piles=0;
+        for(int i=0;i<len;i++){
+            int poker=envelopes[i][1];
+            int left=0,right=piles,mid;
+            while(left<right){
+                mid=left+(right-left)/2;
+                if(poker<=top[mid])
+                    right=mid;
+                else
+                    left=mid+1;
+            }
+            if(left==piles){
+                piles++;
+            }
+            top[left]=poker;
+        }
+        return piles;
     }
 };
 ```
