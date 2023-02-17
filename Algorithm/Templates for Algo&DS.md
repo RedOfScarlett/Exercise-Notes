@@ -1709,13 +1709,18 @@ public:
 ```c++
 //并不是维护一个二维都递增的序列
 
+bool cmpq(vector<int> &a,vector<int> &b) {
+    if(a[0]==b[0])
+        return a[1]>b[1];
+    else
+        return a[0]<b[0];
+}
 class Solution {
 public:
     int maxEnvelopes(vector<vector<int>>& envelopes) {
         int len=envelopes.size(); 
-        sort(envelopes.begin(), envelopes.end(), [](const auto& e1, const auto& e2) {
-            return e1[0] < e2[0] || (e1[0] == e2[0] && e1[1] > e2[1]);
-        });
+        sort(envelopes.begin(),envelopes.end(),cmpq);
+        vector<int> top(len);
         int piles=0;
         for(int i=0;i<len;i++){
             int poker=envelopes[i][1];
