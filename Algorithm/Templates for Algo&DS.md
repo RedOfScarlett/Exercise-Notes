@@ -1388,6 +1388,22 @@ H(key)=key%p,p为小于等于表长的最大素数
 
 将映射到同一位置的不同关键字存储在一个线性链表中。有点像邻接表。	 
 
+## 暴力搜索
+
+### LeetCode
+
+#### DFS
+
+##### 63.不同路径 III
+
+```C++
+//四个方向+有障碍+格子不能重复走
+```
+
+
+
+## 贪心
+
 
 
 ## 动态规划
@@ -1742,9 +1758,217 @@ public:
 };
 ```
 
+##### 322.零钱兑换（剑指 Offer  II 103.  最少的硬币数目）
+
+```C++
+//先想dp[n]再想状态n。
+class Solution {
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        vector<int> dp(amount+1,amount+1);//凑出金额n所需要的最少硬币数量为dp[n]
+        dp[0]=0;
+        for(int i=0;i<amount+1;i++){
+            for(int &coin:coins){
+                if(i<coin)
+                    continue;
+                dp[i]=min(dp[i],1+dp[i-coin]);//当前硬币面值为coin，要从凑出金额i-coin这个状态转移过来
+            }
+        }
+        return dp[amount]>amount?-1:dp[amount];
+    }
+};
+```
+
+#### 二维dp
+
+##### 10.正则表达式匹配（剑指 Offer  19.  正则表达式匹配）
+
+```C++
+//注意题意*是可以把前一个字符消除的！
+class Solution {
+public:
+    bool isMatch(string s, string p) {
+        int m=s.size();
+        int n=p.size();
+        //s中前m个字符和p中前n个字符能否匹配。注意明确dp数组中下标代表字符串的长度。
+        vector< vector<bool> > dp(m+1,vector<bool>(n+1,false));
+        //s为空串时有两种情况
+        //1.s和p都为空字符串（长度为0）时可以匹配。
+        //2.p为#*#*#*这种，偶数位置的*把奇数位置的#消除掉
+        dp[0][0]=true;
+        for(int j=1;j<n;j++){//循环中的j代表下标
+            if(p[j]=='*')
+                dp[0][j+1]=dp[0][j-1];
+        }
+        //s不为空串时
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(s[i]==p[j]||p[j]=='.'){//当前位置匹配，则继续判断p的下一个位置
+                    dp[i+1][j+1]=dp[i][j];
+                }else if(p[j]=='*'){
+                    if(p[j-1]==s[i]||p[j-1]=='.'){
+                        dp[i+1][j+1]=dp[i][j+1]||dp[i+1][j]||dp[i+1][j-1];//a*匹配多个a||匹配一个a||消除自己
+                    }else{
+                        dp[i+1][j+1]=dp[i+1][j-1];//前一个位置都不匹配，a*只能消除自己
+                    } 
+                }
+            }
+        }
+        return dp[m][n];
+    }
+};
+```
+
+##### 44.通配符匹配
+
+```c++
+//这题就不存在消除的情况了
+class Solution {
+public:
+    bool isMatch(string s, string p) {
+        int m=s.size();
+        int n=p.size();
+        //s中前m个字符和p中前n个字符能否匹配。注意明确dp数组中下标代表字符串的长度。
+        vector< vector<bool> > dp(m+1,vector<bool>(n+1,false));
+        //s为空串时有两种情况
+        //1.s和p都为空字符串（长度为0）时可以匹配。
+        //2.p为****
+        dp[0][0]=true;
+        for(int j=0;j<n;j++){//循环中的j代表下标
+            if(p[j]=='*'){
+                dp[0][j+1]=true;
+            }else{
+                break;
+            }
+        }
+        //s不为空串时
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(s[i]==p[j]||p[j]=='?'){//当前位置匹配，则继续判断p的下一个位置
+                    dp[i+1][j+1]=dp[i][j];
+                }else if(p[j]=='*'){
+                    dp[i+1][j+1]=dp[i][j+1]||dp[i+1][j];//a*匹配多个a||匹配一个a
+                }
+            }
+        }
+        return dp[m][n];
+    }
+};
+```
+
+##### 62.不同路径（剑指 Offer  II 098.  路径的数目）
+
+```c++
+class Solution {
+public:
+    int uniquePaths(int m, int n) {
+        vector< vector<int> > dp(m, vector<int> (n,1));//到达(i,j)位置有dp[i][j]种路径
+        for(int i=1;i<m;i++){
+            for(int j=1;j<n;j++){
+                dp[i][j]=dp[i-1][j]+dp[i][j-1];//到达一个位置的路径数=到达它上边一个格子的路径数+到达它左边一个格子的路径数
+            }
+        }
+        return dp[m-1][n-1];
+    }
+};
+//只依赖上边和左边格子的状态，因此可以状态压缩。
+//压缩成一行
+class Solution {
+public:
+    int uniquePaths(int m, int n) {
+        vector<int> dp(n,1);//到达第一行所有位置都是一条路径，所以直接赋1
+        for(int i = 1;i < m;i++){
+            for(int j = 1;j < n;j++){
+                dp[j] += dp[j-1];
+            }
+        }
+        return dp[n-1];
+    }
+};
+```
+
+##### 63. 不同路径 II
+
+```C++
+//有障碍，进行一下判断就行了
+class Solution {
+public:
+    int uniquePathsWithObstacles(vector<vector<int>>& obstacleGrid) {
+        int m=obstacleGrid.size();
+        int n=obstacleGrid[0].size();
+        vector<int> dp(n);//不能初始化为全1，因为到达某位置可能没有路径
+        dp[0]=(obstacleGrid[0][0]==0);
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(obstacleGrid[i][j]){
+                    dp[j]=0;
+                    continue;
+                }
+                if(j>=1 && obstacleGrid[i][j - 1]==0)
+                    dp[j]+=dp[j-1];
+            }
+        }
+        return dp[n-1];
+    }
+};
+```
+
+##### 64.最小路径和（剑指 Offer II 099. 最小路径之和，剑指 Offer 47. 礼物的最大价值）
+
+```C++
+class Solution {
+public:
+    int minPathSum(vector<vector<int>>& grid) {
+        int m=grid.size();
+        int n=grid[0].size();
+        //到达(i,j)位置的最小路径和为dp[i][j],但此处可以原地操作，直接使用grid
+        
+        //base case
+        for (int i=1;i<m;++i)
+            grid[i][0]+=grid[i-1][0];
+        for (int j=1;j<n;++j)
+            grid[0][j]+=grid[0][j-1];
+
+        for (int i=1;i<m;++i){
+            for (int j=1;j<n;++j){
+                grid[i][j]+=min(grid[i-1][j],grid[i][j-1]);
+            }
+        }
+        return grid[m-1][n-1];    
+    }
+};
+```
+
+##### 72.编辑距离
+
+```c++
+//从两个指针移动的角度来看状态转移方程
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        int m=word1.size();
+        int n=word2.size();
+        vector< vector<int> > dp(m+1,vector<int>(n+1));//将word1的前i位转换成word2的前j位需要dp[i][j]次操作。dp数组下标代表字符串长度
+        dp[0][0]=0;//两个空str需要0次编辑
+        for(int i=1;i<=m;i++)
+            dp[i][0]=i;
+        for(int j=1;j<=n;j++)
+            dp[0][j]=j;
+        //迭代中i和j代表数组下标
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(word1[i]==word2[j])
+                    dp[i+1][j+1]=dp[i][j];//匹配，不需要操作
+                else
+                    dp[i+1][j+1]=1+min({dp[i][j],dp[i][j+1],dp[i+1][j]});//替换，删除，插入
+            }
+        }
+        return dp[m][n];
+    }
+};
+```
 
 
-## 贪心
 
 ### LeetCode
 
