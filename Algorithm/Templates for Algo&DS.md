@@ -1404,6 +1404,90 @@ H(key)=key%p,p为小于等于表长的最大素数
 
 ## 贪心
 
+### LeetCode
+
+##### 45.跳跃游戏Ⅱ
+
+```C++
+class Solution {
+public:
+    int jump(vector<int>& nums) {
+        int n=nums.size();
+        int end=0;
+        int farthest=0;
+        int jumps=0;
+        for(int i=0;i<n-1;i++){
+            farthest=max(nums[i]+i,farthest);//更新从i位置可以达到的最远位置
+            //该位置可以从上一次跳跃达到的最远位置再跳一次达到则jumps++
+            if(end==i){
+                jumps++;
+                end=farthest;//更新可达的最远位置
+                if (farthest >= n - 1) 
+                    break;
+            }
+        }
+        return jumps;
+    }
+};
+```
+
+##### 55.跳跃游戏
+
+```C++
+//同时更新上一跳可达最远距离和判断当前位置是否可达
+class Solution {
+public:
+    bool canJump(vector<int>& nums) {
+        int n=nums.size();
+        int farthest=0;
+        for(int i=0;i<n-1;i++){
+            farthest=max(farthest,i+nums[i]);//更新可达的最远距离，代表进行了一次跳跃
+            //上一跳可达的最远距离小于等于当前数组下标代表当前位置不可达
+            if(farthest<=i)
+                return false;
+        }
+        return true;
+    }
+};
+```
+
+##### 121. 买卖股票的最佳时机
+
+```C++
+//秒杀题
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int minPrice = INT_MAX;
+        int maxProfit = 0;
+        for (int p:prices){
+            minPrice=min(p,minPrice);
+            maxProfit=max(maxProfit,p-minPrice);
+        }
+        return maxProfit;
+    }
+};
+```
+
+##### 122. 买卖股票的最佳时机 II
+
+```C++
+//还是贪心
+//低买高卖一定赚钱
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int sz=prices.size();
+        int ans=0;
+        for(int i=0;i<sz-1;i++){
+            if(prices[i+1]>prices[i])
+                ans+=(prices[i+1]-prices[i]);
+        }
+        return ans;
+    }
+};
+```
+
 
 
 ## 动态规划
@@ -1968,56 +2052,45 @@ public:
 };
 ```
 
-
-
-### LeetCode
-
-##### 45.跳跃游戏Ⅱ
+##### 123.买卖股票的最佳时机 III
 
 ```C++
 class Solution {
 public:
-    int jump(vector<int>& nums) {
-        int n=nums.size();
-        int end=0;
-        int farthest=0;
-        int jumps=0;
-        for(int i=0;i<n-1;i++){
-            farthest=max(nums[i]+i,farthest);//更新从i位置可以达到的最远位置
-            //该位置可以从上一次跳跃达到的最远位置再跳一次达到则jumps++
-            if(end==i){
-                jumps++;
-                end=farthest;//更新可达的最远位置
-                if (farthest >= n - 1) 
-                    break;
-            }
+    int maxProfit(vector<int>& prices) {
+        int sz=prices.size();
+        if(sz<=1)
+            return 0;
+        int dp[sz][2][3];//dp[天数][当前是否持股][卖出的次数]
+        dp[0][0][0]=0;
+        dp[0][1][0]=-prices[0];//第一天买了股票没卖出
+        
+        //不可能
+        dp[0][0][1]=-100000;//防止溢出
+        dp[0][0][2]=-100000;
+        dp[0][1][1]=-100000;
+        dp[0][1][2]=-100000;
+
+        for(int i=1;i<sz;i++){
+            dp[i][0][0]=0;
+            dp[i][0][1]=max(dp[i-1][0][1],dp[i-1][1][0]+prices[i]);
+            dp[i][0][2]=max(dp[i-1][0][2],dp[i-1][1][1]+prices[i]);
+            dp[i][1][0]=max(dp[i-1][1][0],dp[i-1][0][0]-prices[i]);
+            dp[i][1][1]=max(dp[i-1][1][1],dp[i-1][0][1]-prices[i]);//用INT_MIN这里会溢出
+            dp[i][1][2]=-100000;
         }
-        return jumps;
+        return max({dp[sz-1][0][1],dp[sz-1][0][2],0});
     }
 };
 ```
 
-##### 55.跳跃游戏
+##### 188.买卖股票的最佳时机 Ⅳ
 
-```C++
-//同时更新上一跳可达最远距离和判断当前位置是否可达
-class Solution {
-public:
-    bool canJump(vector<int>& nums) {
-        int n=nums.size();
-        int farthest=0;
-        for(int i=0;i<n-1;i++){
-            farthest=max(farthest,i+nums[i]);//更新可达的最远距离，代表进行了一次跳跃
-            //上一跳可达的最远距离小于等于当前数组下标代表当前位置不可达
-            if(farthest<=i)
-                return false;
-        }
-        return true;
-    }
-};
 ```
 
-## 滑动窗口
+```
+
+
 
 #### Leetcode
 
