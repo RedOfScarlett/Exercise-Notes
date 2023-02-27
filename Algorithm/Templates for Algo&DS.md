@@ -2061,38 +2061,88 @@ public:
         int sz=prices.size();
         if(sz<=1)
             return 0;
-        int dp[sz][2][3];//dp[天数][当前是否持股][卖出的次数]
+        int dp[sz][3][2];//dp[天数][卖出的次数][当前是否持股]
         dp[0][0][0]=0;
-        dp[0][1][0]=-prices[0];//第一天买了股票没卖出
+        dp[0][0][1]=-prices[0];//第一天买了股票没卖出
         
         //不可能
-        dp[0][0][1]=-100000;//防止溢出
-        dp[0][0][2]=-100000;
+        dp[0][1][0]=-100000;//防止溢出
+        dp[0][2][0]=-100000;
         dp[0][1][1]=-100000;
-        dp[0][1][2]=-100000;
+        dp[0][2][1]=-100000;
 
         for(int i=1;i<sz;i++){
             dp[i][0][0]=0;
-            dp[i][0][1]=max(dp[i-1][0][1],dp[i-1][1][0]+prices[i]);
-            dp[i][0][2]=max(dp[i-1][0][2],dp[i-1][1][1]+prices[i]);
-            dp[i][1][0]=max(dp[i-1][1][0],dp[i-1][0][0]-prices[i]);
-            dp[i][1][1]=max(dp[i-1][1][1],dp[i-1][0][1]-prices[i]);//用INT_MIN这里会溢出
-            dp[i][1][2]=-100000;
+            dp[i][1][0]=max(dp[i-1][1][0],dp[i-1][0][1]+prices[i]);
+            dp[i][2][0]=max(dp[i-1][2][0],dp[i-1][1][1]+prices[i]);
+            dp[i][0][1]=max(dp[i-1][0][1],dp[i-1][0][0]-prices[i]);
+            dp[i][1][1]=max(dp[i-1][1][1],dp[i-1][1][0]-prices[i]);//用INT_MIN这里会溢出
+            dp[i][2][1]=-100000;
         }
-        return max({dp[sz-1][0][1],dp[sz-1][0][2],0});
+        return max({dp[sz-1][1][0],dp[sz-1][2][0],0});
     }
 };
 ```
 
 ##### 188.买卖股票的最佳时机 Ⅳ
 
+```C++
+//三维
+class Solution {
+public:
+    int maxProfit(int k, vector<int>& prices) {
+        int sz=prices.size();
+        if(sz<=1)
+            return 0;
+        int dp[sz][sz][2];//dp[天数][卖出的次数][当前是否持股]
+        
+        //base case
+        for(int i=0;i<sz;i++){
+            dp[0][i][0]=0;
+            dp[i][0][0]=0;//没买过也没买过；
+            dp[0][i][1]=-prices[0];//第i+1天买了股票且没卖出过
+            dp[i][0][i]=0;
+        }
+
+        for(int i=1;i<sz;i++){
+            dp[0][1][i]=-10000;
+            for(int j=1;j<sz;j++){
+                if(j<i&&j<=k){
+                    dp[i][0][j]=max(dp[i-1][0][j],dp[i-1][1][j-1]+prices[i]);
+                    dp[i][1][j]=max(dp[i-1][1][j],dp[i-1][0][j]-prices[i]);
+                }
+            }
+        }
+        return dp[sz-1][0][k];
+    }
+};
+
+//一维数组
+/*
+对于第 i 天的股票价格：
+buy[j] 表示 ≤ i 天进行 j 次买入时的最大收益；
+sell[j] 表示 ≤ i 天进行 j 次卖出时的最大收益。
+*/
+class Solution {
+public:
+    int maxProfit(int k, vector<int>& prices) {
+        int days = prices.size();
+        k = k > days/2? days/2 : k;
+        vector<int> buy(k + 1, INT_MIN), sell(k + 1, 0);
+        for (int i = 0; i < days; ++i) {
+            for (int j = 1; j <= k; ++j) {
+                buy[j] = max(buy[j], sell[j-1] - prices[i]);//不买,卖
+                sell[j] = max(sell[j], buy[j] + prices[i]);//不卖,卖
+            }
+        }
+        return sell[k];
+    }
+};
 ```
 
-```
+## 滑动窗口
 
-
-
-#### Leetcode
+### Leetcode
 
 ##### 209. 长度最小的子数组
 
@@ -2111,6 +2161,36 @@ public:
             }
         }
         return len;
+    }
+};
+```
+
+## 模拟
+
+#### 59. 螺旋矩阵 II
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> generateMatrix(int n) {
+        int t = 0;      // top
+        int b = n-1;    // bottom
+        int l = 0;      // left
+        int r = n-1;    // right
+        vector<vector<int>> ans(n,vector<int>(n));
+        int k=1;
+        int last=n*n;
+        while(k<=last){
+            for(int i=l;i<=r;++i,++k) ans[t][i] = k;
+            ++t;
+            for(int i=t;i<=b;++i,++k) ans[i][r] = k;
+            --r;
+            for(int i=r;i>=l;--i,++k) ans[b][i] = k;
+            --b;
+            for(int i=b;i>=t;--i,++k) ans[i][l] = k;
+            ++l;
+        }
+        return ans;
     }
 };
 ```
