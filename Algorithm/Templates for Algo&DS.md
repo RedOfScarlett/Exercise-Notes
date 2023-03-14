@@ -2084,7 +2084,7 @@ public:
 };
 ```
 
-##### 188.买卖股票的最佳时机 Ⅳ
+##### !188.买卖股票的最佳时机 Ⅳ 
 
 ```C++
 //三维
@@ -2140,6 +2140,162 @@ public:
 };
 ```
 
+##### 174.地下城游戏
+
+```c++
+//因为存在加血，导致从起点到终点的过程中不满足无后效性了，因此需要反向dp即从右下到左上
+class Solution {
+public:
+    int calculateMinimumHP(vector<vector<int>>& dungeon) {
+        int m=dungeon.size();
+        int n=dungeon[0].size();
+        vector< vector<int> > dp(m,vector<int>(n));//从dp[i][j]走到dp[m-1][n-1]需要的总血量，dp[0][0]即为结果
+        
+        dp[m-1][n-1]=dungeon[m-1][n-1]<0?-dungeon[m-1][n-1]:0;
+
+        for(int i=m-2;i>=0;i--){//初始化最右列
+            dp[i][n-1]=max(dp[i+1][n-1]-dungeon[i][n-1],0);
+        }
+        for(int j=n-2;j>=0;j--){//初始化最下行
+            dp[m-1][j]=max(dp[m-1][j+1]-dungeon[m-1][j],0);
+        }
+
+        for(int i=m-2;i>=0;i--){
+            for(int j=n-2;j>=0;j--){
+                dp[i][j]=max(min(dp[i+1][j],dp[i][j+1])-dungeon[i][j],0);
+            }
+        }
+        return dp[0][0]+1;//初始最少一滴血
+    }
+};
+```
+
+##### !312.戳气球
+
+```c++
+//区间dp：在区间上进行动态规划，求解一段区间上的最优解。主要是通过合并小区间的 最优解进而得出整个大区间上最优解的dp算法。
+class Solution {
+public:
+    int maxCoins(vector<int>& nums) {
+        int n=nums.size();
+        //头尾各加一个一块钱的气球
+        nums.insert(nums.begin(),1);
+        nums.push_back(1);
+        vector<vector<int>> dp(n+2,vector<int>(n+2,0));
+        for(int i=n;i>=0;i--){
+            for(int j=i+1;j<n+2;j++){
+                for(int k=i+1;k<j;k++){//用k来划分(i,j)为(i,k),(k,j)
+                    dp[i][j]=max(dp[i][j],dp[i][k]+dp[k][j]+nums[i]*nums[j]*nums[k]);
+                }
+            }
+        }
+        return dp[0][n+1];
+    }
+};
+```
+
+##### 416.分割等和子集(剑指 Offer  II 101.  分割等和子集)
+
+```C++
+//转换为target为sum/2的0-1背包问题
+class Solution {
+public:
+    bool canPartition(vector<int>& nums) {
+        int n=nums.size();
+        int sum=accumulate(nums.begin(),nums.end(),0);
+        if(sum&1)
+            return false;
+        sum/=2;
+        vector<bool> dp(sum+1,false);//dp[i][j],nums[i]放入子集中能否得到总和为j
+        dp[0]=true;
+        for(int i=0;i<n;i++){//对于每个sum，是否选择第i个元素放入子集
+            for(int j=sum;j>=0;j--){// 每一个元素一定是不可重复放入，倒序遍历是为了保证物品i只被放入一次。右下角的值依赖上一层左上角的值，因此需要保证左边的值仍然是上一层的，从右向左覆盖。
+                if(j-nums[i]>=0)
+                    dp[j]=dp[j]||dp[j-nums[i]];//不放或放
+            }
+        }
+        return dp[sum];
+    }
+};
+```
+
+##### 494.目标和(剑指 Offer  II 102.  加减的目标值)
+
+```c++
+//该问题抽象为:用价值与体积均为nums[i]的物品,恰好凑满容量为pos的背包方案数
+class Solution {
+public:
+    int findTargetSumWays(vector<int>& nums, int target) {
+        int n=nums.size();
+        int sum=accumulate(nums.begin(),nums.end(),0);
+        if(sum<abs(target)||(sum+target)%2==1)
+            return 0;
+        int pos=(sum+target)/2;//pos为nums中所有取+的数之和,pos+neg=sum,pos-neg=target
+        vector<int> dp(pos+1,0);//dp[i][j]，前i个数能凑出j的表达式数目
+        dp[0]=1;
+        for(int i=0;i<n;i++){
+            for(int j=pos;j>=nums[i];j--){
+                dp[j]+=dp[j-nums[i]];//所有dp[j-nums[i]]加起来就是dp[j]
+            }
+        }
+        return dp[pos];
+    }
+};
+```
+
+##### *514.自由之路
+
+```C++
+class Solution {
+public:
+    int findRotateSteps(string ring, string key) {
+        int n = ring.size(), m = key.size();
+        vector< vector<int> > pos(26, vector<int>());
+        for (int i = 0; i < n; ++i) {
+            pos[ring[i] - 'a'].push_back(i);
+        }
+        vector<vector<int>> dp(m, vector<int>(n, INT_MAX));
+        for (auto& i: pos[key[0] - 'a']) {
+            dp[0][i] = min(i, n - i) + 1;
+        }
+        for (int i = 1; i < m; ++i) {
+            for (auto& j: pos[key[i] - 'a']) {
+                for (auto& k: pos[key[i - 1] - 'a']) {
+                    dp[i][j] = min(dp[i][j], dp[i - 1][k] + min(abs(j - k), n - abs(j - k)) + 1);
+                }
+            }
+        }
+        return *min_element(dp[m - 1].begin(), dp[m - 1].end());
+    }
+};
+
+```
+
+##### 518.零钱兑换 II
+
+```C++
+//状态压缩
+class Solution {
+public:
+    int change(int amount, vector<int>& coins) {
+        int n=coins.size();
+        vector<int> dp(amount+1,0);
+        dp[0]=1;
+        for(int i=0;i<n;i++){
+            for(int j=1;j<=amount;j++){
+                if(j-coins[i]>=0)
+                    dp[j]=dp[j]+dp[j-coins[i]];
+            }
+        }
+        return dp[amount];
+    }
+};
+```
+
+​	
+
+​	
+
 ## 滑动窗口
 
 ### Leetcode
@@ -2165,9 +2321,41 @@ public:
 };
 ```
 
+##### 904.水果成篮
+
+```C++
+class Solution {
+public:
+    int totalFruit(vector<int>& fruits) {
+        int l=0,r=0;
+        int sz=fruits.size();
+        if(sz==0)
+            return 0;
+        int ans=0;
+        map<int, int> mp;//元素，数量
+        while(r<sz){
+            if(mp.size()<=2){          
+                mp[fruits[r]]++;
+                r++;
+            }
+            if(l<r&&mp.size()>2){
+                mp[fruits[l]]--;
+                if(mp[fruits[l]]==0)
+                    mp.erase(fruits[l]);
+                l++;
+            }
+            ans=max(ans,r-l);
+        }
+        return ans;
+    }
+};
+```
+
+
+
 ## 模拟
 
-#### 59. 螺旋矩阵 II
+##### 59. 螺旋矩阵 II
 
 ```C++
 class Solution {
