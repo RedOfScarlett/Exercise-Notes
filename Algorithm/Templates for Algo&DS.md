@@ -2313,7 +2313,72 @@ public:
 };
 ```
 
-​	
+##### 583.两个字符串的删除操作
+
+```C++
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        int m=word1.size();
+        int n=word2.size();
+        vector< vector<int> > dp(m+1,vector<int>(n+1));
+        for (int i=1;i<=m;++i) {
+            dp[i][0]=i;
+        }
+        for (int j=1;j<=n;++j) {
+            dp[0][j]=j;
+        }
+        for(int i=1;i<=m;i++){
+            for(int j=1;j<=n;j++){
+                if(word1[i-1]==word2[j-1])
+                    dp[i][j]=dp[i-1][j-1];
+                else
+                    dp[i][j]=min(dp[i - 1][j], dp[i][j - 1]) + 1;
+            }
+        }
+        return dp[m][n];
+    }
+};
+
+//删除次数其实就等于m+n-2*最长公共子序列长度
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        return word1.size()+word2.size()-2*longestCommonSubsequence(string word1, string word2)
+    }
+};
+```
+
+##### 712.  两个字符串的最小 ASCII 删除和
+
+```C++
+//和前一题差不多，注意初始化的时候的区别
+class Solution {
+public:
+    int minimumDeleteSum(string s1, string s2) {
+        int m=s1.size();
+        int n=s2.size();
+        vector< vector<int> > dp(m+1,vector<int>(n+1));
+        for (int i=1;i<=m;++i) {
+            dp[i][0]=dp[i-1][0]+s1[i-1];
+        }
+        for (int j=1;j<=n;++j) {
+            dp[0][j]=dp[0][j-1]+s2[j-1];
+        }
+        for(int i=1;i<=m;i++){
+            for(int j=1;j<=n;j++){
+                if(s1[i-1]==s2[j-1])
+                    dp[i][j]=dp[i-1][j-1];
+                else
+                    dp[i][j]=min(dp[i - 1][j]+s1[i-1], dp[i][j - 1]+s2[j-1]);
+            }
+        }
+        return dp[m][n];
+    }
+};
+```
+
+
 
 ## 滑动窗口
 
@@ -2367,6 +2432,26 @@ public:
         }
         return ans;
     }
+};
+```
+
+##### *787.  K 站中转内最便宜的航班
+
+```C++
+class Solution {
+public:
+    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {
+        vector< vector<int> > dp(n,vector<int>(k+2,INT_MAX));//dp[i][j]从i点到dst走j步的最少价格。一共n个城市，则有n-1个可飞，k个中转站，所以最多飞k+1次，0下标不用
+        for(int j=0;j<=k+1;j++)
+            dp[src][j]=0;
+        for(int j=1;j<=k+1;j++){
+            for(auto &flight:flights){
+                //src可达
+                if(dp[flight[0]][j-1]!=INT_MAX)
+                    dp[flight[1]][j]=min(dp[flight[1]][j],dp[flight[0]][j-1]+flight[2]);//不飞或飞
+            }
+        }
+        return dp[dst][k + 1]!=INT_MAX?dp[dst][k + 1]:-1;//如果还是INT_MAX说明不可达
 };
 ```
 
