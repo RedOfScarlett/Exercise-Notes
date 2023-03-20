@@ -2243,7 +2243,7 @@ public:
 };
 ```
 
-##### *514.自由之路
+##### !514.自由之路
 
 ```C++
 class Solution {
@@ -2376,6 +2376,69 @@ public:
         return dp[m][n];
     }
 };
+
+//也可以用图最短路径算法
+```
+
+##### !887. 鸡蛋掉落
+
+```c++
+class Solution {
+public:
+    int superEggDrop(int k, int n) {
+        vector< vector<int> > dp(n+1,vector<int>(k+1,0));//dp[i][j]：j个蛋，扔i次就可以确切测出一栋dp[i][j]层的楼的f。则我们的目标是求i而不是dp。要破除思维定式，dp、i、j都可以使我们的求解目标。
+        int i=0;
+        while(dp[i][k]<n){
+            ++i;
+            for(int j=1;j<=k;j++){
+                dp[i][j]=dp[i-1][j-1]+dp[i-1][j]+1;//在某一楼层扔鸡蛋，鸡蛋碎：意味着对该层下方的楼层剩下j-1个蛋和i-1次操作；不碎：对该层的上方剩下j个蛋和i-1次操作；当前楼层算一层因此+1；
+            }
+        }
+        return i;
+    }
+};
+
+//状态压缩
+class Solution {
+public:
+    int superEggDrop(int k, int n) {
+        vector<int> dp(k+1,0);
+        int ans=1;
+        while(dp[k]<n){
+            for(int j=k;j>0;j--){
+                dp[j]=dp[j-1]+dp[j]+1;//只使用左上和上的状态，可以压缩
+            }
+            ans++;
+        }
+        return ans;
+    }
+};
+```
+
+##### 931.下降路径最小和
+
+```C++
+class Solution {
+public:
+    int minFallingPathSum(vector<vector<int>>& matrix) {
+        int n=matrix.size();
+        vector< vector<int> > dp(n,vector<int>(n,0));//ixj矩阵的下降路径最小和为dp[i][j];
+        for(int j=0;j<n;j++) 
+            dp[0][j]=matrix[0][j];
+        for(int i=1;i<n;i++){
+            for(int j=0;j<n;j++){
+                dp[i][j]=dp[i-1][j]+matrix[i][j];//一定可以从上方到达
+                if(j>0)//左侧防越界
+                    dp[i][j]=min(dp[i][j],dp[i-1][j-1]+matrix[i][j]);
+                if(j<n-1)//左侧防越界
+                    dp[i][j]=min(dp[i][j],dp[i-1][j+1]+matrix[i][j]);
+            }
+        }
+        return *min_element(dp[n-1].begin(),dp[n-1].end());
+    }
+};
+
+//状态压缩
 ```
 
 
@@ -2452,6 +2515,170 @@ public:
             }
         }
         return dp[dst][k + 1]!=INT_MAX?dp[dst][k + 1]:-1;//如果还是INT_MAX说明不可达
+};
+```
+
+##### 3.无重复的最长子串(剑指 Offer  48.  最⻓不含重复字符的子字符串，剑指 Offer  II 016.  不含重复字符的最长子字符串)
+
+```c++
+class Solution {
+public:
+    int lengthOfLongestSubstring(string s) {
+        map<char, int> window;//记录窗口内字符的数量
+        int left=0,right=0,res=0;
+        int sz=s.size();
+        while(right<sz){
+            char c=s[right];
+            right++;
+            window[c]++;
+            while(window[c]>1){//出现c重复，让left到达第一c之后的位置
+                char d=s[left];
+                left++;
+                window[d]--;
+            }
+            res=max(res,right-left);//记录最大长度
+        }
+        return res;
+    }
+};
+```
+
+##### !438.找到字符串中所有字母异位词（剑指 Offer  II 015.  字符串中的所有变位词）
+
+```C++
+class Solution {
+public:
+    vector<int> findAnagrams(string s, string p) {
+        unordered_map<char,int> need,window;
+        int left=0,right=0,valid=0;
+        for(auto &c:p)
+            need[c]++;
+        vector<int> res;
+        while(right<s.size()){
+            char c=s[right];
+            right++;
+            if(need.find(c)!=need.end()){
+                window[c]++;
+                if(window[c]==need[c])//对c的需求量达标
+                    valid++;//有效字符数+1
+            }
+            while(right-left==p.size()){//子串长度与p相同时,这里写if也对，但是遵循模板。
+                if(valid==need.size()·)//判断子串和p是否是异位词
+                    res.push_back(left);
+                char d=s[left];
+                left++;
+                if(need.find(d)!=need.end()){
+                    if(window[d]==need[d])
+                        valid--;
+                    window[d]--;
+                }
+            }
+        }
+        return res;
+    }
+};
+```
+
+##### 567. 字符串的排列（剑指 Offer  II 014.  字符串中的变位词）
+
+```c++
+//上一题的简化版
+class Solution {
+public:
+    bool checkInclusion(string s1, string s2) {
+        unordered_map<char,int> window,need;
+        for(auto &c:s1)
+            need[c]++;
+        int left=0,right=0,valid=0;
+        while(right<s2.size()){
+            char c=s2[right];
+            right++;
+            if(need.count(c)){
+                window[c]++;
+                if(window[c]==need[c])
+                    valid++;
+            }
+            while(right-left==s1.size()){
+                if(valid==need.size())
+                    return true;
+                char d=s2[left];
+                left++;
+                if(need.count(d)){
+                    if(window[d]==need[d])
+                        valid--;
+                    window[d]--;
+                }
+            }
+        }
+        return false;
+    }
+};
+```
+
+##### 76.最小覆盖子串（剑指 Offer  II 017.  含有所有字符的最短字符串）
+
+```C++
+class Solution {
+public:
+    string minWindow(string s, string t) {
+        unordered_map<char,int> need,window;
+        for(auto &c:t)
+            need[c]++;
+        int left=0,right=0,valid=0;
+        int start=0,len=INT_MAX;
+        while(right<s.size()){
+            char c=s[right];
+            right++;
+            if(need.count(c)){
+                window[c]++;
+                if(window[c]==need[c])
+                    valid++;
+            }
+            while(valid==need.size()){
+                if(right-left<len){
+                    start=left;
+                    len=right-left;
+                }
+                char d=s[left];
+                left++;
+                if(need.count(d)){
+                    if(window[d]==need[d])
+                        valid--;
+                    window[d]--;
+                }
+            }
+        }
+        return len==INT_MAX? "":s.substr(start,len);
+    }
+};
+```
+
+##### !239.滑动窗⼝最⼤值
+
+```C++
+//维护一个单调队列
+class Solution {
+public:
+    vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+        vector<int> ans;
+        deque<int> dq;
+        int n=nums.size();
+        for(int i=0;i<k;i++){
+            while(!dq.empty()&&nums[i]>=nums[dq.back()])
+                dq.pop_back();
+            dq.push_back(i);
+        }
+        ans.push_back(nums[dq.front()])
+        for(int i=k;i<n;i++){
+            while(!dq.empty()&&nums[i]>nums[dq.back()])//将一个元素从队尾push进去时，要将所有小于它的数都pop出去，才能保持队列的单调性
+                dq.pop_back();
+            dq.push_back(i);
+            while(q.front()<=i-k)//单调队列中不属于当前窗口的元素要被pop掉
+                q.pop_front()
+            ans.push_back(nums[dq.front()]);
+        }
+        return ans;
+    }
 };
 ```
 
