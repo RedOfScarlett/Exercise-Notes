@@ -1392,6 +1392,173 @@ H(key)=key%p,p为小于等于表长的最大素数
 
 ### LeetCode
 
+#### 回溯
+
+本质上就是穷举。
+
+解决一个回溯问题，本质上就是一个决策树的遍历过程。需要考虑三个问题：
+
+1.路径：即已作出的选择
+
+2.选择列表：当前可做的选择
+
+3.结束条件：到达决策树的底层，无法再做选择的条件
+
+```c++
+vector<int> result;
+void backTrack(路径，选择){
+    if(满足结束条件){
+        result.pushback(路径);
+        return;
+    }
+    for(选择 in 选择列表）{
+        做选择；
+        backTrack(路径，选择列表)；
+        撤销选择；
+    }
+}
+//回溯的核心就是for循环里的递归，在递归调用前“做选择”，在递归调用后“撤销选择”
+```
+
+
+
+##### 17.电话号码的字母组合
+
+```C++
+class Solution {
+public:
+    vector<string> dic{"","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
+    vector<string> ans;
+    string temp;
+
+    vector<string> letterCombinations(string digits) {
+        temp.clear();
+        ans.clear();
+        if(digits.size()==0)
+            return ans;
+        backTrack(digits,0);
+        return ans;
+    }
+
+    void backTrack(const string& digits, int index){
+        if(index == digits.size()){
+            ans.push_back(temp);
+            return;
+        }
+        string letters = dic[digits[index]-'0'];
+        for(int i=0;i<letters.size();i++){//每轮循环处理一个数字对应的字符
+            temp.push_back(letters[i]);
+            backTrack(digits,index+1);//递归进入处理下一个数字
+            temp.pop_back();
+        }
+    }
+};
+```
+
+##### 22.括号生成（剑指 Offer  II 085.  生成匹配的括号）
+
+```C++
+class Solution {
+public:
+    vector<string> generateParenthesis(int n) {
+        vector<string> ans;
+        string track;
+        backTrack(n,n,track,ans);
+        return ans;
+    }
+    
+    void backTrack(int left, int right, string &track,vector<string> &ans){
+        if(left<0||right<0||right<left)
+            return;
+        if(left==0&&right==0){//所有括号都用完
+            ans.push_back(track);
+            return;
+        }
+        track.push_back('(');
+        backTrack(left-1,right,track,ans);
+        track.pop_back();
+
+        track.push_back(')');
+        backTrack(left,right-1,track,ans);
+        track.pop_back();
+    }
+};
+```
+
+##### ！37.解数独
+
+```C++
+class Solution {
+public:
+    void solveSudoku(vector<vector<char>>& board) {
+        backtrack(board,0,0);
+    }
+    
+    //判断是否遵循规则
+    bool isValid(vector<vector<char>>& board,int r,int c,char n){
+        for(int i=0;i<9;i++){
+            if(board[r][i]==n)//选点所在行有没有存在n
+                return false;
+            if(board[i][c]==n)//选点所在列有没有存在n
+                return false;
+            if(board[(r/3)*3+i/3][(c/3)*3+i%3]==n)//选点所在3x3宫内有没有存在n
+                return false;
+        }
+        return true;
+    }
+    
+    bool backtrack(vector<vector<char>>& board,int i,int j){
+        if(j==9)
+            return backtrack(board,i+1,0);//穷举超过最后一列时换下一行从头开始
+        if(i==9)//遍历到[0][9],说明81个位置都遍历完了，找到可行解
+            return true;
+        if(board[i][j]!='.')//有数字，跳到下个位置
+            return backtrack(board,i,j+1);
+        for(char ch='1';ch<='9';ch++){//没有到达边界且该位置为'.'
+            if(!isValid(board,i,j,ch))//ch不符合规则
+                continue;
+            board[i][j]=ch;//符合规则，放置ch
+            if(backtrack(board,i,j+1))//找到一个可行解，立即结束
+                return true;
+            board[i][j]='.';//该路径没有可行解，回溯
+        }
+        return false;
+    }
+};
+```
+
+##### ！39.组合总数
+
+```C++
+//朴素的
+class Solution {
+public:
+    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {
+        vector<int> path;
+        vector<vector<int>> ans;
+        backTrack(candidates,target,0,path,ans);
+        return ans;
+    }
+    
+    void backTrack(vector<int>& candidates,int target,int idx,vector<int>& path, vector<vector<int>>& ans){
+        if(target==0){
+            ans.push_back(path);
+            return;
+        }
+        if(target<0)
+            return;
+        
+        for(int i=idx;i<candidates.size();i++){//i=idx,剪枝           
+            path.push_back(candidates[i]);
+            backTrack(candidates,target-candidates[i],i,path,ans);//因为每个数字可以无限次使用，因此这里还是i而不是i+1
+            path.pop_back();
+        }
+    }
+};
+```
+
+
+
 #### DFS
 
 ##### 63.不同路径 III
@@ -2441,11 +2608,15 @@ public:
 //状态压缩
 ```
 
+##### 377.组合总和 Ⅳ
+
+```C++
+//顺序不同视作不同组合，因此不是完全背包
+```
 
 
-## 滑动窗口
 
-### Leetcode
+### LeetCode
 
 ##### 209. 长度最小的子数组
 
@@ -2682,9 +2853,65 @@ public:
 };
 ```
 
+## 差分数组
+
+一种辅助数组，记录原始数组相邻元素之间的差，即原数组中第i个位置值减去原数组第i-1个位置的值。假设我们频繁的对数组进行范围更新，则只需要更新端点即可。
+
+对差分数组求前缀和可以得到原始数组。
+
+差分数组的性质是，当我们希望对原数组的某一个区间 [l,r) 施加一个增量 inc 时，差分数组 d 对应的改变是：d[l] 增加 inc，d[r] 减少 inc。此时原数组中下标 >=l 位置的元素都获得了 inc 增量，并且为了不影响原数组中下标 >=r 的元素，所以需要在下标为 r 处减去 inc 。这样对于区间的修改就变为了对于两个位置的修改。并且这种修改是可以叠加的，即当我们多次对原数组的不同区间施加不同的增量，我们只要按规则修改差分数组即可。
+
+### LeetCode
+
+##### 1094.拼车
+
+```C++
+//将每一个站点的车上的乘客变动数量统计起来，如果在某个节点时大于最大容量，那就不行
+class Solution {
+public:
+    bool carPooling(vector<vector<int>> &trips, int capacity)
+    {
+        vector<int> diff(1001, 0);//0 <= from < to <= 1000
+        for (int i = 0; i < trips.size(); i++) {//记录每站变化的人数，即建立差分数组
+            diff[trips[i][1]] += trips[i][0];
+            diff[trips[i][2]] -= trips[i][0];
+        }
+        int temp = 0;
+        for (int j = 0; j < diff.size(); j++) {//计算前缀和，即通过差分数组还原原数组
+            temp += diff[j];
+            if (temp > capacity) {
+                return false;
+            }
+        }
+        return true;
+    }
+};
+
+```
+
+##### 1109.航班预定统计
+
+```C++
+class Solution {
+public:
+    vector<int> corpFlightBookings(vector<vector<int>>& bookings, int n) {
+        vector<int> ans(n+1);
+        for(auto &booking:bookings){
+            ans[booking[0]-1]+=booking[2];
+            ans[booking[1]]-=booking[2];
+        }
+        ans.pop_back();//最后一个空位用不上，因为是右开区间减去inc
+        partial_sum(ans.begin(),ans.end(),ans.begin());//不自定义op就是求前缀和   
+        return ans;
+    }
+};
+```
+
 
 
 ## 模拟
+
+### LeetCode
 
 ##### 59. 螺旋矩阵 II
 
