@@ -2608,11 +2608,41 @@ public:
 //状态压缩
 ```
 
+<<<<<<< HEAD
 ##### 377.组合总和 Ⅳ
 
 ```C++
 //顺序不同视作不同组合，因此不是完全背包
 ```
+=======
+##### 221.最大正方形
+
+```C++
+class Solution {
+public:
+    int maximalSquare(vector<vector<char>>& matrix) {
+        int m=matrix.size();
+        int n=matrix[0].size();
+        vector< vector<int> > dp(m,vector<int>(n,0));//以[i][j]为右下角的最大正方形边长
+        int len=0;
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(matrix[i][j]=='1'){
+                    if(i==0||j==0){
+                        dp[i][j]=1;
+                    }else{
+                        dp[i][j]=min({dp[i-1][j-1],dp[i-1][j],dp[i][j-1]})+1;
+                    }
+                    len=max(len,dp[i][j]);
+                } 
+            }
+        }
+        return len*len;
+    }
+};
+```
+
+>>>>>>> 15c3f7ff5b2061f19c6fb8a6b8398e3a679b1575
 
 
 
