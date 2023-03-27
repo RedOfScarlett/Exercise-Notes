@@ -1527,7 +1527,32 @@ public:
 };
 ```
 
-##### ！39.组合总数
+##### 77.组合(剑指 Offer  II 080.  含有 k  个元素的组合)
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> combine(int n, int k) {
+        vector<vector<int>> ans;
+        vector<int> track;
+        backTrack(n,k,1,track,ans);
+        return ans;
+    }
+    void backTrack(int n,int k,int idx,vector<int>& track,vector<vector<int>>& ans){
+        if(k==track.size()){
+            ans.push_back(track);
+            return;
+        }
+        for(int i=idx;i<=n;i++){
+            track.push_back(i);
+            backTrack(n,k,i+1,track,ans);
+            track.pop_back();
+        }
+    }
+};
+```
+
+##### ！39.组合总和(剑指 Offer  II 081.  允许重复选择元素的组合)
 
 ```C++
 //朴素的
@@ -1547,7 +1572,6 @@ public:
         }
         if(target<0)
             return;
-        
         for(int i=idx;i<candidates.size();i++){//i=idx,剪枝           
             path.push_back(candidates[i]);
             backTrack(candidates,target-candidates[i],i,path,ans);//因为每个数字可以无限次使用，因此这里还是i而不是i+1
@@ -1557,14 +1581,199 @@ public:
 };
 ```
 
+##### 40. 组合总和 II(剑指  Offer II 082. 含有重复元素集合的组合)
+
+```C++
+//记得不能重复就得先排序
+class Solution {
+public:
+    vector<vector<int>> combinationSum2(vector<int>& candidates, int target) {
+        vector<int> path;
+        vector<vector<int>> ans;
+        sort(candidates.begin(),candidates.end());//在前一题基础上先排序
+        backTrack(candidates,target,0,path,ans);
+        return ans;
+    }   
+    void backTrack(vector<int>& candidates,int target,int idx,vector<int>& path, vector<vector<int>>& ans){
+        if(target==0){
+            ans.push_back(path);
+            return;
+        }
+        if(target<0)
+            return;
+        for(int i=idx;i<candidates.size();i++){//i=idx,剪枝
+            if(i>idx&&candidates[i]==candidates[i-1])
+                continue; //这里的意思是：排序过的candidates中的不同位置的相同数字不应该被放到path的同一个位置上，否则就会出现重复。i>idx说明此处递归出栈进入下一层循环了。
+            path.push_back(candidates[i]);
+            backTrack(candidates,target-candidates[i],i+1,path,ans);
+            path.pop_back();
+        }
+    }
+};
+```
+
+##### 216. 组合总和 III
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> combinationSum3(int k, int n) {
+        vector<int> track;
+        vector<vector<int>> ans;
+        backTrack(k,n,1,track,ans);
+        return ans;
+    }
+    void backTrack(int k, int n, int idx,vector<int>& track,vector<vector<int>>& ans)
+    {
+        if(k==0){
+            if(n==0)
+                ans.push_back(track);
+            return;
+        }
+        for(int i=idx;i<=9 && n-i>= 0; i++){
+            track.push_back(i);
+            backTrack(k-1,n-i,i+1,track,ans);
+            track.pop_back();
+        }
+    }
+};
+```
 
 
-#### DFS
 
-##### 63.不同路径 III
+##### 46.全排列(剑指 Offer  II 083.  没有重复元素集合的全排列)
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> permute(vector<int>& nums) {
+        vector<int> track;
+        vector<vector<int>> ans;
+        backtrack(nums,track,ans);
+        return ans;
+    }
+    
+    void backtrack(const vector<int> &nums,vector<int> &track,vector<vector<int>> &ans){
+        if(track.size()==nums.size()){
+            ans.push_back(track);
+            return;
+        }
+        for(int i=0;i<nums.size();i++){//因为是全排列，所以0开始
+            if(count(track.begin(),track.end(),nums[i]))//这个数用过了，剪枝
+                continue;
+            track.push_back(nums[i]);
+            backtrack(nums,track,ans);
+            track.pop_back();
+        }
+    }
+};
+```
+
+##### ！47.全排列 II(剑指  Offer II 084. 含有重复元素集合的全排列)
+
+```C++
+class Solution {
+private:
+    vector<vector<int>>result;
+    vector<int> path;
+    void backtracking(vector<int>& nums,vector<bool>used){
+        if(path.size()==nums.size()){
+            result.push_back(path);
+            return;
+        }
+        for(int i=0;i<nums.size();i++){
+            if(used[i]==true||(i!=0 && used[i-1]==false && nums[i]==nums[i-1]))
+                	continue;//关键！！
+            path.push_back(nums[i]);
+            used[i]=true;
+            backtracking(nums,used);
+            used[i]=false;
+            path.pop_back();
+        }
+    }
+public:
+    vector<vector<int>> permuteUnique(vector<int>& nums) {
+        vector<bool>used(nums.size(),false);
+        sort(nums.begin(),nums.end());
+        backtracking(nums,used);
+        return result;
+    }
+};
+
+//STL大法好
+class Solution {
+public:
+    vector<vector<int>> permute(vector<int>& nums) {
+        sort(nums.begin(),nums.end());//next_permutation求的是按字典序的全排列，所以要先排序
+        vector<vector<int>> res;
+        res.push_back(nums);//先把排好序的向量压入res
+
+        /*
+        next_permutation介绍：
+        如果序列已经是最后一个排列，则本函数将序列重排为最小的序列，返回false。否则将输入序列转为字典序的下一个排列，返回true。
+        */
+        while(next_permutation(nums.begin(),nums.end()))
+        {
+            res.push_back(nums);
+        }
+        return res;
+    }
+};
+```
+
+##### 78.子集（剑指 Offer  II 079.  所有子集）
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> subsets(vector<int>& nums) {
+        vector<vector<int>> ans;
+        vector<int> track;
+        backTrack(nums,0,track,ans);
+        return ans;
+    }
+    void backTrack(vector<int> &nums,int idx,vector<int> &track,vector<vector<int>> &ans){
+        ans.push_back(track);//这里就没有track.size()==nums.size()的判断了
+        for(int i=idx;i<nums.size();i++){
+            track.push_back(nums[i]);
+            backTrack(nums,i+1,track,ans);
+            track.pop_back();
+        }
+    }
+};
+```
+
+##### 90. 子集 II
+
+```C++
+//这种题的套路都是一样的，如果没有重复元素，直接回溯，如果有重复元素，就先排序，再回溯，回溯中，如果当前元素和上一个元素相同，那么直接continue
+class Solution {
+public:
+    vector<vector<int>> subsetsWithDup(vector<int>& nums) {
+        sort(nums.begin(),nums.end());
+        vector<vector<int>> ans;
+        vector<int> track;
+        backTrack(nums,0,track,ans);
+        return ans;
+    }
+    void backTrack(vector<int>& nums,int idx,vector<int>& track,vector<vector<int>>& ans){
+        ans.push_back(track);
+        for(int i=idx;i<nums.size();i++){
+            if(i>idx&&nums[i]==nums[i-1])//去重
+                continue;
+            track.push_back(nums[i]);
+            backTrack(nums,i+1,track,ans);
+            track.pop_back();    
+        }
+    }
+};
+```
+
+##### 980.不同路径 III
 
 ```C++
 //四个方向+有障碍+格子不能重复走
+
 ```
 
 
@@ -2608,13 +2817,29 @@ public:
 //状态压缩
 ```
 
-<<<<<<< HEAD
 ##### 377.组合总和 Ⅳ
 
 ```C++
 //顺序不同视作不同组合，因此不是完全背包
+class Solution {
+public:
+    int combinationSum4(vector<int>& nums, int target) {
+        int n=nums.size();
+        vector< vector<int> > dp(n+1,vector<int>(target+1));//前i个元素凑出总和j的种数
+        for(int i=0;i<=n;i++){
+            dp[i][0]=1;
+            dp[0][i]=0;
+        }
+        for(int i=1;i<=n;i++){
+            for(int j=1;j<=target;j++){
+                if(j-nums[i]>=0)
+                dp[i][j]=dp[i-1][j]+dp[i][j-nums[i-1]];
+            }
+        }
+        return dp[n][target];
+    }
+};
 ```
-=======
 ##### 221.最大正方形
 
 ```C++
@@ -2642,9 +2867,7 @@ public:
 };
 ```
 
->>>>>>> 15c3f7ff5b2061f19c6fb8a6b8398e3a679b1575
-
-
+## 滑动窗口
 
 ### LeetCode
 
@@ -2857,7 +3080,7 @@ public:
 ##### !239.滑动窗⼝最⼤值
 
 ```C++
-//维护一个单调队列
+//维护一个递减的单调队列，则队头元素就是最大值
 class Solution {
 public:
     vector<int> maxSlidingWindow(vector<int>& nums, int k) {
