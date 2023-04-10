@@ -1390,8 +1390,6 @@ H(key)=key%p,p为小于等于表长的最大素数
 
 ## 暴力搜索
 
-### LeetCode
-
 #### 回溯
 
 本质上就是穷举。
@@ -1420,7 +1418,7 @@ void backTrack(路径，选择){
 //回溯的核心就是for循环里的递归，在递归调用前“做选择”，在递归调用后“撤销选择”
 ```
 
-
+### LeetCode
 
 ##### 17.电话号码的字母组合
 
@@ -1774,6 +1772,154 @@ public:
 ```C++
 //四个方向+有障碍+格子不能重复走
 
+```
+
+##### 51.N皇后
+
+```c++
+//朴素的
+class Solution {
+public:
+    vector<vector<string>> solveNQueens(int n) {
+        vector<vector<string>> ans;
+        vector<string> queens(n,string(n,'.'));
+        backTrack(queens,0,ans);
+        return ans;
+    }
+    void backTrack(vector<string>& queens,int curRow,vector<vector<string>>& ans){
+        int n=queens.size();
+        if (curRow==n){
+            ans.push_back(queens);
+            return;
+        }
+        for (int i=0;i<n;++i) {
+            if (isValid(queens,curRow,i)) {
+                queens[curRow][i]='Q';
+                backTrack(queens,curRow+1,ans);
+                queens[curRow][i]='.';
+            }
+        }
+    }
+    bool isValid(vector<string>& queens,int row,int col) {
+        for (int i=0;i<row;++i){//判断同列是否有其他皇后
+            if (queens[i][col]=='Q') 
+                return false;
+        }
+        for (int i=row-1,j=col-1;i>=0&&j>=0;--i,--j){//判断主对角线（左上）是否有其他皇后
+            if (queens[i][j]=='Q')
+                return false;
+        }
+        for (int i=row-1,j=col+1;i>=0&&j<queens.size();--i,++j) {//判断副对角线（右上）是否有其他皇后
+            if (queens[i][j]=='Q')
+                return false;
+        }
+        return true;
+    }
+};
+
+//高级货
+class Solution {
+public:
+    vector<vector<string>> solveNQueens(int n) {
+        vector<int> queenCol(n,-1);
+        vector<vector<string>> ans;
+        backTrack(queenCol,0,ans);
+        return ans;
+    }
+    /*因为一行只能有一个皇后，因此可以使用一个一维行向量queenCol，来保存所有皇后的列位置, queenCol[i] 就是表示第i个皇后在 (i, queenCol[i]) 位置。*/
+    void backTrack(vector<int>& queenCol,int curRow,vector<vector<string>>& ans){
+        int n=queenCol.size();
+        if(curRow==n){//将queenCol复原成棋盘
+            vector<string> temp(n,string(n,'.'));
+            for(int i=0;i<n;i++)
+                temp[i][queenCol[i]]='Q';
+            ans.push_back(temp);
+            return;
+        }
+        for(int col=0;col<n;col++){//通过循环控制col，通过递归控制row
+            if(isValid(queenCol,curRow,col)){
+                queenCol[curRow]=col;//记录可以放置皇后的位置
+                backTrack(queenCol,curRow+1,ans);
+                queenCol[curRow]=-1;
+            }
+        }
+    }
+    /*屌就屌在判断对角线冲突非常简便，因为当两个点在同一条对角线上，那么二者的横坐标差的绝对值等于纵坐标差的绝对值，利用这条性质，可以快速地判断对角线冲突*/
+    bool isValid(vector<int>& queenCol,int row,int col){
+        for(int i=0;i<row;i++){
+            if(col==queenCol[i]||abs(row-i)==abs(col-queenCol[i]))
+                return false;
+        }
+        return true;
+    }
+};
+```
+
+##### 52.N皇后 II
+
+```C++
+//求解决方案数，更简单一些
+class Solution {
+public:
+    int totalNQueens(int n) {
+        vector<int> queenCol(n,-1);
+        int ans=0;
+        backTrack(queenCol,0,ans);
+        return ans;
+    }
+    /*
+    因为一行只能有一个皇后，因此可以使用一个一维行向量queenCol，来保存所有皇后的列位置, queenCol[i] 就是表示第i个皇后在 (i, queenCol[i]) 位置。
+    */
+    void backTrack(vector<int>& queenCol,int curRow,int& ans){
+        int n=queenCol.size();
+        if(curRow==n)
+            ++ans;//这里改成计数
+        for(int col=0;col<n;col++){//通过循环控制col，通过递归控制row
+            if(isValid(queenCol,curRow,col)){
+                queenCol[curRow]=col;//记录可以放置皇后的位置
+                backTrack(queenCol,curRow+1,ans);
+                queenCol[curRow]=-1;
+            }
+        }
+    }
+    /*
+    屌就屌在判断对角线冲突非常简便，因为当两个点在同一条对角线上，那么二者的横坐标差的绝对值等于纵坐标差的绝对值，利用这条性质，可以快速地判断对角线冲突
+    */
+    bool isValid(vector<int>& queenCol,int row,int col){
+        for(int i=0;i<row;i++){
+            if(col==queenCol[i]||abs(row-i)==abs(col-queenCol[i]))
+                return false;
+        }
+        return true;
+    }
+};
+
+//我们并不需要知道每一行皇后的具体位置，而只需要知道会不会产生冲突即可。对于每行要新加的位置，需要看跟之前的列，对角线，及逆对角线之间是否有冲突。
+class Solution {
+public:
+    int totalNQueens(int n) {
+        int ans=0;
+        vector<bool> cols(n),diag(2*n),anti_diag(2*n);//分别来记录之前的列 cols，对角线 diag，及逆对角线 anti_diag 上是否有冲突
+        backTrack(n,0,cols,diag,anti_diag,ans);
+        return ans;
+    }
+    void backTrack(int n,int row,vector<bool>& cols,vector<bool>& diag,vector<bool>& anti_diag,int& ans) {
+        if(row==n)
+            ++ans;
+        for(int col=0;col<n;++col){
+            /*
+            所有同一条主对角线的数，其纵坐标减去横坐标再加n，一定是相等的
+            同一条逆对角线上的数字，其横纵坐标之和一定是相等的,根据这个来判断对角线上的冲突
+            */
+            int idx1=col-row+n, idx2=col+row;
+            if(cols[col] || diag[idx1] || anti_diag[idx2])
+                continue;
+            cols[col]=diag[idx1]=anti_diag[idx2]=true;
+            backTrack(n,row+1,cols,diag,anti_diag,ans);
+            cols[col]=diag[idx1]=anti_diag[idx2]=false;
+        }
+    }
+};
 ```
 
 
@@ -2689,6 +2835,46 @@ public:
 };
 ```
 
+##### 1092. 最短公共超序列
+
+```C++
+//可以运用最长公共子序列的方法
+//注意是子序列不是子串，子序列是可以不连续的
+class Solution {
+public:
+    string shortestCommonSupersequence(string str1, string str2){
+        string ans;
+        int m=str1.size(),n=str2.size();
+        vector<vector<string>> dp(m+1,vector<string>(n+1));//这里需要知道 LCS具体是什么，而不仅仅是长度
+        for(int i=1;i<=m;++i){//构造lcs的过程
+            for(int j=1;j<=n;++j){
+                if (str1[i-1]==str2[j-1]){
+                    dp[i][j]=dp[i-1][j-1]+str1[i-1];
+                }else{
+                    dp[i][j]=dp[i-1][j].size()>dp[i][j-1].size()?dp[i-1][j]:dp[i][j-1];
+                }
+            }
+        }
+        int i=0,j=0;
+        for(char c:dp[m][n]){//有了lcs就要生成scs了
+            /*这里先将str1和str2在lcs之前的元素分别加入ans中*/
+            while(str1[i]!=c&&i<m)
+                ans+=str1[i++];
+            while(str2[j]!=c&&j<n)
+                ans+=str2[j++];
+            /*将lcs加入到ans中*/
+            ans+=c;
+            ++i;
+            ++j;
+        }
+        /*把str1和str2剩余部分再拼接上去*/
+        return ans+str1.substr(i)+str2.substr(j);
+    }
+};
+```
+
+
+
 ##### 583.两个字符串的删除操作
 
 ```C++
@@ -2866,6 +3052,8 @@ public:
     }
 };
 ```
+
+
 
 ## 滑动窗口
 
