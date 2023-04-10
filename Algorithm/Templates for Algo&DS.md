@@ -1388,9 +1388,220 @@ H(key)=key%p,p为小于等于表长的最大素数
 
 将映射到同一位置的不同关键字存储在一个线性链表中。有点像邻接表。	 
 
-## 暴力搜索
+## 链表
 
-#### 回溯
+#### 双指针
+
+### LeetCode
+
+##### 83. 删除排序链表中的重复元素
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode() : val(0), next(nullptr) {}
+ *     ListNode(int x) : val(x), next(nullptr) {}
+ *     ListNode(int x, ListNode *next) : val(x), next(next) {}
+ * };
+ */
+
+//链表已排序，没什么好说的，递归
+class Solution {
+public:
+    ListNode* deleteDuplicates(ListNode* head) {
+        if (!head || !head->next) 
+            return head;
+        head->next = deleteDuplicates(head->next);
+        return (head->val == head->next->val) ? head->next : head;//这里的head->next就是上一层的head->next->next,head就是head->next
+    }
+};
+//双指针
+class Solution {
+public:
+    ListNode* deleteDuplicates(ListNode* head) {
+        if (!head||!head->next) 
+            return head;
+        ListNode *slow=head,*fast=head->next,*pdel=nullptr;
+        while(fast!=nullptr){
+            if(fast->val!=slow->val){
+                fast=fast->next;
+                slow=slow->next;
+            }else{
+                pdel=fast;
+                fast=fast->next;
+                slow->next=fast;
+                delete(pdel);//内存释放是C++程序员的良好修养
+                pdel=nullptr;
+            }
+        }
+        return head;
+    }
+};
+```
+
+##### 82. 删除排序链表中的重复元素 II
+
+```C++
+//这题要把重复数字的节点本身也删了
+//三指针,不够优雅
+class Solution {
+public:
+    ListNode* deleteDuplicates(ListNode* head) {
+        if (!head||!head->next) 
+            return head;
+        ListNode *dummy=new ListNode(0,head);//需要一个头结点·1
+        //pre永远指向当前遍历位置中不被删除的最后一个元素
+        ListNode *pre=dummy,*slow=head,*fast=head->next,*pdel=nullptr;
+        while(fast!=nullptr){
+            if(fast->val!=slow->val){
+                //slow和fast值不等且不相邻说明有元素需要删除
+                if(slow->next!=fast){
+                    while(slow!=fast){
+                        pdel=slow;
+                        slow=slow->next;
+                        delete(pdel);//内存释放是C++程序员的良好修养
+                        pdel=nullptr;
+                    }
+                    pre->next=fast;//将链表接好
+                }else{
+                    pre=pre->next;
+                    slow=fast;
+                    fast=fast->next;
+                }    
+            }else{//只移动fast
+                fast=fast->next;
+            }
+        }
+        //处理尾部的重复
+        if(slow->next!=fast){
+            while(slow!=fast){
+                pdel=slow;
+                slow=slow->next;
+                delete(pdel);//内存释放是C++程序员的良好修养
+                pdel=nullptr;
+            }
+            pre->next=fast;//将链表接好
+        }
+        return dummy->next;
+    }
+};
+```
+
+
+
+## DFS
+
+### LeetCode
+
+##### [104. 二叉树的最大深度](https://leetcode.cn/problems/maximum-depth-of-binary-tree/)
+
+```C++
+//送分题
+class Solution {
+public:
+    int maxDepth(TreeNode* root) {
+        if(!root)
+            return 0;
+        return 1+max(maxDepth(root->left),maxDepth(root->right));
+    }
+};
+
+```
+
+##### [559. N 叉树的最大深度](https://leetcode.cn/problems/maximum-depth-of-n-ary-tree/)
+
+```C++
+//上一题改一下
+/*
+// Definition for a Node.
+class Node {
+public:
+    int val;
+    vector<Node*> children;
+
+    Node() {}
+
+    Node(int _val) {
+        val = _val;
+    }
+
+    Node(int _val, vector<Node*> _children) {
+        val = _val;
+        children = _children;
+    }
+};
+*/
+class Solution {
+public:
+    int maxDepth(Node* root) {
+        if(!root)
+            return 0;
+        int depth=0;
+        for(auto child:root->children){
+            depth=max(depth,maxDepth(child));
+        }
+        return depth+1;//记得加上根节点
+    }
+};
+```
+
+##### [1376. 通知所有员工所需的时间](https://leetcode.cn/problems/time-needed-to-inform-all-employees/)
+
+```c++
+//转化成图搜索，informTime[]即边权
+//自顶向下DFS
+class Solution {
+public:
+    int numOfMinutes(int n, int headID, vector<int>& manager, vector<int>& informTime) {
+        int ans=0;
+        for(int i=0;i<n;i++)
+            if(manager[i]!=-1)
+                G[manager[i]].emplace_back(i);//记录每个员工的下属
+        DFS(manager,informTime,headID,0,ans);
+        return ans;
+    }
+
+    void DFS(vector<int>& manager, vector<int>& informTime,int id,int sumTime,int &ans){
+        if(informTime[id]==0){//底层员工
+            ans=max(ans,sumTime);
+        }
+        for(auto &v:G[id]){
+            DFS(manager,informTime,v,sumTime+informTime[id],ans);
+        }
+    }
+private:
+    unordered_map<int,vector<int>> G;//记录每个负责人的下属
+};
+
+
+//自底向上，将问题转化为从最底层员工找总负责人的累积时间，最大累积时间即答案
+//这种转化思想类似于二叉树最近公共祖先
+class Solution {
+public:
+    int numOfMinutes(int n, int headID, vector<int>& manager, vector<int>& informTime) {
+        int ans=0;
+        for(int i=0;i<n;i++){
+            if(informTime[i]==0){//无下属，说明是底层员工
+                int leader=i;
+                int t=0;
+                while(leader!=-1){//自下而上找总负责人同时累加时间
+                    t+=informTime[leader];
+                    leader=manager[leader];
+                }
+                ans=max(ans,t);
+            }
+        }
+        return ans;
+    }
+};
+```
+
+
+
+## 回溯
 
 本质上就是穷举。
 
@@ -1722,6 +1933,7 @@ public:
 ##### 78.子集（剑指 Offer  II 079.  所有子集）
 
 ```C++
+//[1,2,3]的子集可以由[1,2]的子集追加3得到，[1,2]的子集可以由[1]的子集追加2得到，base case就是空集
 class Solution {
 public:
     vector<vector<int>> subsets(vector<int>& nums) {
@@ -1732,7 +1944,7 @@ public:
     }
     void backTrack(vector<int> &nums,int idx,vector<int> &track,vector<vector<int>> &ans){
         ans.push_back(track);//这里就没有track.size()==nums.size()的判断了
-        for(int i=idx;i<nums.size();i++){
+        for(int i=idx;i<nums.size();i++){//从idx开始，防止出现重复的子集
             track.push_back(nums[i]);
             backTrack(nums,i+1,track,ans);
             track.pop_back();
@@ -1767,7 +1979,7 @@ public:
 };
 ```
 
-##### 980.不同路径 III
+##### !980.不同路径 III
 
 ```C++
 //四个方向+有障碍+格子不能重复走
