@@ -1490,9 +1490,7 @@ public:
 };
 ```
 
-
-
-## DFS
+## 二叉树
 
 ### LeetCode
 
@@ -1548,6 +1546,49 @@ public:
 };
 ```
 
+##### [865. 具有所有最深节点的最小子树](https://leetcode.cn/problems/smallest-subtree-with-all-the-deepest-nodes/)（[1123. 最深叶节点的最近公共祖先](https://leetcode.cn/problems/lowest-common-ancestor-of-deepest-leaves/)）
+
+```c++
+/*
+对于一棵完全二叉树来说，根结点的左右子树的最大深度一定是相同的，此时直接返回根结点即可。若左右子树的最大深度不同，则最深结点一定位于深度大的子树中
+*/
+class Solution {
+public:
+    TreeNode* subtreeWithAllDeepest(TreeNode* root) {
+        int diff=maxDepth(root->left)-maxDepth(root->right);
+        if(diff==0)
+            return root;
+        else
+            return subtreeWithAllDeepest(diff>0? root->left:root->right);
+    }
+    int maxDepth(TreeNode* root) {
+        return !root? 0 : 1+max(maxDepth(root->left),maxDepth(root->right));
+    }
+};
+
+//通过pair传递最大深度，把原本的两个递归揉合到了一个递归函数中，避免大量重复计算
+class Solution {
+public:
+    TreeNode* subtreeWithAllDeepest(TreeNode* root) {
+        return helper(root).second;
+    }
+    //pair<节点最大深度, 包含最深节点的最小子树>
+    pair<int, TreeNode*> helper(TreeNode* node) {
+        if (!node) return {0, nullptr};
+        auto left = helper(node->left), right = helper(node->right);
+        int d1 = left.first, d2 = right.first;
+        //{当前节点最大深度，左右子树中深度大的那棵}
+        return {max(d1, d2) + 1, (d1 == d2) ? node : (d1 > d2 ? left.second : right.second)};
+    }
+};
+```
+
+##### 
+
+## DFS
+
+### LeetCode
+
 ##### [1376. 通知所有员工所需的时间](https://leetcode.cn/problems/time-needed-to-inform-all-employees/)
 
 ```c++
@@ -1602,6 +1643,8 @@ public:
 
 
 ## 回溯
+
+### 核心问题
 
 本质上就是穷举。
 
@@ -2132,6 +2175,13 @@ public:
         }
     }
 };
+```
+
+##### [491. 递增子序列](https://leetcode.cn/problems/non-decreasing-subsequences/)
+
+```c++
+//这里的递增是非严格单调的
+
 ```
 
 
