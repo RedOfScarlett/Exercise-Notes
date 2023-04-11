@@ -1583,7 +1583,40 @@ public:
 };
 ```
 
-##### 
+##### [199. 二叉树的右视图](https://leetcode.cn/problems/binary-tree-right-side-view/)
+
+```C++
+//只需要保存每一层最右边的数字
+//对层序遍历略加修改即可
+class Solution {
+public:
+    vector<int> rightSideView(TreeNode* root) {
+        vector<int> ans;
+        if(!root)
+            return ans;
+        queue<TreeNode*> q;
+        q.push(root);
+        TreeNode* temp=nullptr;
+        while(!q.empty()){
+            ans.push_back(q.back()->val);//加入每一层最后一个元素
+            int sz=q.size();
+            for(int i=0;i<sz;i++){
+                temp=q.front();
+                q.pop();
+                if(temp->left)
+                    q.push(temp->left);
+                if(temp->right)
+                    q.push(temp->right);
+            }
+        }
+        return ans;
+    }
+};
+```
+
+
+
+## 暴力搜索
 
 ## DFS
 
@@ -2210,7 +2243,39 @@ public:
 ##### [698. 划分为k个相等的子集](https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/)
 
 ```c++
+//建立长度为k的数组v，只有当v里面所有的数字都是 target 的时候，才能返回 true
+class Solution {
+public:
+    bool canPartitionKSubsets(vector<int>& nums, int k) {
+        int sum=accumulate(nums.begin(),nums.end(),0);
+        if(sum%k)//无法分成k份
+            return false;
+        vector<int> v(k);
+        //排成降序，这样每次优先选大的，相当于贪心
+        sort(nums.begin(),nums.end(),greater<int>());
+        return backTrack(nums,sum/k,v,0);
+    }
 
+    bool backTrack(vector<int>& nums,int target,vector<int>& v,int idx){
+        if(idx==nums.size()){
+            for(auto t:v){
+                if(t!=target)
+                    return false;
+            }
+            return true;//v中所有元素都等于target时
+        }
+        //int num=num[idx];
+        for(int i=0;i<v.size();i++){
+            if(v[i]+nums[idx]>target)
+                continue;
+            v[i]+=nums[idx];
+            if(backTrack(nums,target,v,idx+1))//v中后续元素都满足等于target
+                return true;
+            v[i]-=nums[idx];//回溯
+        }
+        return false;
+    }
+};
 ```
 
 
