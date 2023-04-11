@@ -2180,7 +2180,36 @@ public:
 ##### [491. 递增子序列](https://leetcode.cn/problems/non-decreasing-subsequences/)
 
 ```c++
-//这里的递增是非严格单调的
+//这里的递增是非严格单调的,同时因为是求递增子序列，因此是不能对原数组进行排序的
+class Solution {
+public:
+    vector<vector<int>> findSubsequences(vector<int>& nums) {
+        vector<vector<int>> ans;
+        vector<int> track;
+        backTrack(nums,0,track,ans);
+        return ans;
+    }
+
+    void backTrack(vector<int>& nums,int idx,vector<int>& track,vector<vector<int>>& ans){
+        if(track.size()>=2)
+            ans.push_back(track);
+        unordered_set<int> used;//使用HASHSET保存中间过程的数字
+        for(int i=idx;i<nums.size();i++){
+            if(!track.empty() && track.back()>nums[i] || used.count(nums[i]))
+                continue;
+            track.push_back(nums[i]);
+            used.insert(nums[i]);
+            backTrack(nums,i+1,track,ans);
+            track.pop_back();
+        }
+    }
+};
+
+```
+
+##### [698. 划分为k个相等的子集](https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/)
+
+```c++
 
 ```
 
@@ -3003,7 +3032,7 @@ public:
 };
 ```
 
-##### 494.目标和(剑指 Offer  II 102.  加减的目标值)
+##### [494. 目标和](https://leetcode.cn/problems/target-sum/)(剑指 Offer  II 102.  加减的目标值)
 
 ```c++
 //该问题抽象为:用价值与体积均为nums[i]的物品,恰好凑满容量为pos的背包方案数
@@ -3023,6 +3052,47 @@ public:
             }
         }
         return dp[pos];
+    }
+};
+
+//回溯法
+class Solution {
+public:
+    int findTargetSumWays(vector<int>& nums, int target) {
+        int ans=0;
+        backTrack(nums,target,0,ans);
+        return ans;
+    }
+    void backTrack(vector<int>& nums, int target, int idx, int& ans){
+        if(idx==nums.size()){
+            if(target==0)
+                ans++;
+            return;
+        }
+        backTrack(nums,target-nums[idx],idx+1,ans);
+        backTrack(nums,target+nums[idx],idx+1,ans);
+    }
+};
+
+//剪枝
+class Solution {
+public:
+    int findTargetSumWays(vector<int>& nums, int target) {
+        vector<unordered_map<int, int>> memo(nums.size());
+        return backTrack(nums, target, 0, memo);
+    }
+    
+    int backTrack(vector<int>& nums,int target,int idx,vector<unordered_map<int,int>>& memo){
+        if (idx==nums.size()) 
+            return target==0;
+		
+        if (memo[idx].count(target)) 
+            return memo[idx][target];//前idx个数能凑出target的表达式数目
+		//给当前数添加"-"或者"+"得到的表达式数目
+        int cnt1=backTrack(nums,target-nums[idx],idx+1,memo);
+        int cnt2=backTrack(nums,target+nums[idx],idx+1,memo);
+        memo[idx][target]=cnt1+cnt2;    
+        return cnt1+cnt2;//二者之和即所有表达式数目
     }
 };
 ```
