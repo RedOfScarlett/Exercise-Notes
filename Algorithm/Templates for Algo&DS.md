@@ -2240,17 +2240,18 @@ public:
 
 ```
 
-##### [698. 划分为k个相等的子集](https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/)
+##### ！[698. 划分为k个相等的子集](https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/)
 
 ```c++
-//建立长度为k的数组v，只有当v里面所有的数字都是 target 的时候，才能返回 true
+//建立k个桶，只有当桶里面所有的数字都是target的时候，才能返回true
+//回溯法
 class Solution {
 public:
     bool canPartitionKSubsets(vector<int>& nums, int k) {
         int sum=accumulate(nums.begin(),nums.end(),0);
         if(sum%k)//无法分成k份
             return false;
-        vector<int> v(k);
+        vector<int> v(k);//k个桶
         //排成降序，这样每次优先选大的，相当于贪心
         sort(nums.begin(),nums.end(),greater<int>());
         return backTrack(nums,sum/k,v,0);
@@ -2264,9 +2265,12 @@ public:
             }
             return true;//v中所有元素都等于target时
         }
-        //int num=num[idx];
-        for(int i=0;i<v.size();i++){
-            if(v[i]+nums[idx]>target)
+
+        for(int i=0;i<v.size();i++){//遍历所有桶
+            /*
+            这里i>0 && v[i]==v[i-1]大大缩短时间，否则超时。这里v[i]==v[i-1]是对同一层idx而言的，如果nums[idx]放入v[i-1]中，最终并没有成功，那么回溯到idx层，nums[idx]将被放入v[i]中，由于v[i-1]和v[i]容量相同，最终结果也不会成功。
+            */
+            if(i>0 && v[i]==v[i-1] || v[i]+nums[idx]>target)
                 continue;
             v[i]+=nums[idx];
             if(backTrack(nums,target,v,idx+1))//v中后续元素都满足等于target
