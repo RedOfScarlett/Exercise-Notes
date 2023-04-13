@@ -1673,6 +1673,46 @@ public:
 };
 ```
 
+##### [79. 单词搜索](https://leetcode.cn/problems/word-search/)
+
+```C++
+//同一单元格内字母不允许重复使用，所以需要visited数组来标记使用过的位置
+//当然也可以原地修改board，空间复杂度O(1）
+class Solution {
+public:
+    bool exist(vector<vector<char>>& board, string word) {
+        if (board.empty() || board[0].empty()) return false;
+        int m = board.size(), n = board[0].size();
+        //从每个位置开始遍历一遍
+        for (int i = 0; i < m; ++i) {
+            for (int j = 0; j < n; ++j) {
+                if (DFS(board, word, 0, i, j)) return true;
+            }
+        }
+        return false;
+    }
+    bool DFS(vector<vector<char>>& board, string& word, int idx, int i, int j) {
+        if (idx == word.size()) return true;
+        int m = board.size(), n = board[0].size();
+        if (i < 0 || j < 0 || i >= m || j >= n || board[i][j] != word[idx]) return false;    
+        char c = board[i][j];//记录下来，方便复原
+        board[i][j] = '#';//走过了
+        bool res=DFS(board,word,idx+1,i-1,j)//上
+                ||DFS(board,word,idx+1,i+1,j)//下
+                ||DFS(board,word,idx+1,i,j-1)//左
+                ||DFS(board,word,idx+1,i,j+1);//右
+        board[i][j] = c;//回溯
+        return res;
+    }
+};
+```
+
+##### [1020. 飞地的数量](https://leetcode.cn/problems/number-of-enclaves/)
+
+```C++
+
+```
+
 
 
 ## 回溯
@@ -1944,7 +1984,7 @@ public:
             return;
         }
         for(int i=0;i<nums.size();i++){//因为是全排列，所以0开始
-            if(count(track.begin(),track.end(),nums[i]))//这个数用过了，剪枝
+            if(count(track.begin(),track.end(),nums[i]))//这里也是去重。这个数用过了，剪枝
                 continue;
             track.push_back(nums[i]);
             backtrack(nums,track,ans);
@@ -1957,31 +1997,38 @@ public:
 ##### ！47.全排列 II(剑指  Offer II 084. 含有重复元素集合的全排列)
 
 ```C++
+//去重的标准模板
 class Solution {
-private:
+public:
+    vector<vector<int>> permuteUnique(vector<int>& nums) {
+        vector<bool> used(nums.size(),false);//记录nums中对应位置元素是否使用过
+        sort(nums.begin(),nums.end());
+        backtracking(nums,used);
+        return result;
+    }
+    
     vector<vector<int>>result;
     vector<int> path;
-    void backtracking(vector<int>& nums,vector<bool>used){
+    void backtracking(vector<int>& nums,vector<bool>& used){
         if(path.size()==nums.size()){
             result.push_back(path);
             return;
         }
+        /*
+        for循环是横向遍历的，相当于遍历了剩余集合中所有元素尝试放入track的同一位置
+        */
         for(int i=0;i<nums.size();i++){
+            /*
+            如果要对树层中前一位去重，就用used[i - 1] == false，如果要对树枝前一位去重用used[i - 1] == true。树层去重效率更高
+            */
             if(used[i]==true||(i!=0 && used[i-1]==false && nums[i]==nums[i-1]))
                 	continue;//关键！！
             path.push_back(nums[i]);
             used[i]=true;
-            backtracking(nums,used);
+            backtracking(nums,used);//递归是纵向遍历的，相当于在当前排列的基础上选择递归树孩子节点（剩余集合中的元素）中的一个加入排列中
             used[i]=false;
             path.pop_back();
         }
-    }
-public:
-    vector<vector<int>> permuteUnique(vector<int>& nums) {
-        vector<bool>used(nums.size(),false);
-        sort(nums.begin(),nums.end());
-        backtracking(nums,used);
-        return result;
     }
 };
 
@@ -2280,6 +2327,55 @@ public:
         return false;
     }
 };
+```
+
+##### [剑指 Offer 38. 字符串的排列](https://leetcode.cn/problems/zi-fu-chuan-de-pai-lie-lcof/)
+
+```C++
+//和47题基本一样
+class Solution {
+public:
+    vector<string> permutation(string s) {
+        vector<string> ans;
+        string track;
+        vector<bool> used(s.size(),false);
+        sort(s.begin(),s.end());//去重要先排序
+        backTrack(s,track,ans,used);
+        return ans;
+    }
+
+    void backTrack(string &s, string& track, vector<string>& ans,vector<bool>& used){
+        if(track.size()==s.size()){
+            ans.push_back(track);
+            return;
+        }
+        for(int i=0;i<s.size();i++){
+            if(used[i]==true||(i!=0&&used[i-1]==false&&s[i]==s[i-1]))
+                continue;
+            track.push_back(s[i]);
+            used[i]=true;
+            backTrack(s,track,ans,used);
+            used[i]=false;
+            track.pop_back();
+        }
+    }
+};
+
+
+//stl大法
+class Solution { 
+public:
+    vector<string> permutation(string s) { 
+        vector<string> res;
+        string temp(s);
+        sort(temp.begin(),temp.end());
+        do{
+            res.push_back(temp);
+        }while(next_permutation(temp.begin(),temp.end()));                        
+        return res;
+    } 
+};
+
 ```
 
 
