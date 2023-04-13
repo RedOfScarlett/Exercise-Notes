@@ -1707,10 +1707,296 @@ public:
 };
 ```
 
+##### [200. 岛屿数量](https://leetcode.cn/problems/number-of-islands/)
+
+```C++
+//借助visited数组，标准的DFS求连通子图个数
+class Solution {
+public:
+    int numIslands(vector<vector<char>>& grid) {
+        if (grid.empty()||grid[0].empty()) 
+            return 0;
+        int m=grid.size(), n=grid[0].size(), ans = 0;
+        vector<vector<bool>> visited(m,vector<bool>(n,false));//记录访问过的点
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(grid[i][j]=='0'||visited[i][j])
+                    continue;
+                DFS(grid,visited,i,j);
+                ++ans;
+            }
+        }
+        return ans;
+    }
+
+    void DFS(vector<vector<char>>& grid,vector<vector<bool>>& visited,int x,int y){
+        int m=grid.size(), n=grid[0].size();
+        if(x<0||x>=m||y<0||y>=n||grid[x][y]=='0'||visited[x][y])
+            return;
+        visited[x][y]=true;
+        DFS(grid,visited,x-1,y);
+        DFS(grid,visited,x+1,y);
+        DFS(grid,visited,x,y-1);
+        DFS(grid,visited,x,y+1);
+    }
+};
+
+//不借助visited数组，原地算法
+class Solution {
+public:
+    int numIslands(vector<vector<char>>& grid) {
+        if (grid.empty()||grid[0].empty()) 
+            return 0;
+        int m=grid.size(), n=grid[0].size(), ans = 0;
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(grid[i][j]=='0')
+                    continue;
+                DFS(grid,i,j);//每次DFS将一个陆地联通子图全部修改成海洋
+                ++ans;
+            }
+        }
+        return ans;
+    }
+	//将陆地连通子图修改成海洋
+    void DFS(vector<vector<char>>& grid,int x,int y){
+        int m=grid.size(), n=grid[0].size();
+        if(x<0||x>=m||y<0||y>=n||grid[x][y]=='0')
+            return;
+        grid[x][y]='0';//将访问过的陆地修改为海洋
+        DFS(grid,x-1,y);
+        DFS(grid,x+1,y);
+        DFS(grid,x,y-1);
+        DFS(grid,x,y+1);
+    }
+};
+```
+
 ##### [1020. 飞地的数量](https://leetcode.cn/problems/number-of-enclaves/)
 
 ```C++
+//转化为找出被0完全包围的1的个数
+//递归DFS：对于每个边界的1，都调用递归函数，并将所有相连的1修改为0，最后再遍历一遍数组A，统计剩下的1的个数
+class Solution {
+public:
+    int numEnclaves(vector<vector<int>>& grid) {
+        int ans=0;
+        int m=grid.size();
+        int n=grid[0].size();
+        for (int i=0;i<m;++i) {
+            for (int j=0;j<n;++j) {
+                if (i==0||j==0||i==m-1||j==n-1)//对于每个边界调用递归函数 
+                    DFS(grid,i,j);
+            }
+        }
+        for (int i=0;i<m;++i) {
+            for (int j=0;j<n;++j) {
+                if (grid[i][j]==1)
+                    ans++;
+            }
+        }
+        return ans;
+    }
 
+    void DFS(vector<vector<int>>& grid,int i,int j){
+        if(i<0||i>=grid.size()||j<0||j>=grid[0].size()||grid[i][j]==0)
+            return;//越界或不需要修改，直接返回
+        grid[i][j]=0; 
+        DFS(grid,i+1,j);
+        DFS(grid,i-1,j);
+        DFS(grid,i,j+1);
+        DFS(grid,i,j-1);
+    }
+};
+
+//迭代BFS
+bool inq[MAXV]={false};//此处inq与vis含义不同，inq是记录入队过的节点，因为节点可能在队中但还未访问，如果表示vis的含义，那么可能重复访问
+void BFS(int x){
+	queue<int> q;
+	q.push(x);//第一步，将x入队
+	inq[x]=true;
+	while(!q.empty()){//队非空时循环
+		int u=q.front();
+		q.pop();
+		visit(u);
+		for(int i=0;i<G[u].size();i++){
+			int v=G[u][i];
+			if(inq[v]==false){
+				q.push(v);
+				inq[v]=true;
+			}
+		}
+	}
+}
+class Solution {
+public:
+    int numEnclaves(vector<vector<int>>& grid) {
+        int ans=0;
+        int m=grid.size();
+        int n=grid[0].size();
+        queue<pair<int,int>> q;
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                ans+=grid[i][j];//先统计grid中所有1
+                if(i==0||j==0||i==m-1||j==n-1)
+                    q.push({i,j});
+            }
+        }
+        while(!q.empty()){
+            int x=q.front().first,y=q.front().second;
+            q.pop();
+            if(x<0||x>=m||y<0||y>=n||grid[x][y]!=1)
+                continue;
+            grid[x][y]=0;
+            --ans;
+            q.push({x+1,y});
+            q.push({x-1,y});
+            q.push({x,y+1});
+            q.push({x,y-1});
+        }
+        return ans;
+    }
+};
+```
+
+##### [1254. 统计封闭岛屿的数目](https://leetcode.cn/problems/number-of-closed-islands/)
+
+```C++
+//DFS跟上一题一样，只是统计联通区域与上一题不同
+//这题0是陆地，1是海洋
+class Solution {
+public:
+    int closedIsland(vector<vector<int>>& grid) {
+        int ans=0;
+        int m=grid.size();
+        int n=grid[0].size();
+        for (int i=0;i<m;++i) {
+            for (int j=0;j<n;++j) {
+                if (i==0||j==0||i==m-1||j==n-1)//对于每个边界调用递归函数 
+                    DFS(grid,i,j);
+            }
+        }
+        //统计联通区域
+        for (int i=0;i<m;++i) {
+            for (int j=0;j<n;++j) {
+                if (grid[i][j]!=0)
+                    continue;
+                DFS(grid,i,j);//这个dfs会将陆地全部改成海洋，所以dfs结束时联通图+1且这个连通图全部被标记成海洋
+                ++ans;
+            }
+        }
+        return ans;
+    }
+
+    void DFS(vector<vector<int>>& grid,int i,int j){
+        if(i<0||i>=grid.size()||j<0||j>=grid[0].size()||grid[i][j]==1)
+            return;//越界或不需要修改，直接返回
+        grid[i][j]=1; 
+        DFS(grid,i+1,j);
+        DFS(grid,i-1,j);
+        DFS(grid,i,j+1);
+        DFS(grid,i,j-1);
+    }
+};
+
+//正向的思路，看联通分量图是否达到边界，只用到一次循环
+class Solution {
+public:
+    int closedIsland(vector<vector<int>>& grid) {
+        int res = 0, m = grid.size(), n = grid[0].size();
+        for (int i = 0; i < m; ++i) {
+            for (int j = 0; j < n; ++j) {
+                if (grid[i][j] == 0) 
+                    res += DFS(grid, i, j);
+            }
+        }
+        return res;
+    }
+    int DFS(vector<vector<int>>& grid, int i, int j) {
+        int m = grid.size(), n = grid[0].size();
+        if (i < 0 || i >= m || j < 0 || j >= n)
+            return 0;
+        if (grid[i][j] > 0)
+            return 1;
+        grid[i][j] = 1;
+        return DFS(grid, i + 1, j)&DFS(grid, i - 1, j)&DFS(grid, i, j + 1)&DFS(grid, i, j - 1);//只要有一个触碰到边界，则返回0
+    }
+};
+```
+
+##### [1905. 统计子岛屿](https://leetcode.cn/problems/count-sub-islands/)
+
+```C++
+//这题任何矩阵之外的区域视为水域
+//DFS，只遍历grid2，然后检查岛屿所在格子再grid1中是否也是陆地
+
+class Solution {
+public:
+    int countSubIslands(vector<vector<int>>& grid1, vector<vector<int>>& grid2) {
+        int m=grid1.size();
+        int n=grid1[0].size();
+        int ans=0;
+        for (int i = 0; i < m; ++i) {
+            for (int j = 0; j < n; ++j) {
+                if (grid1[i][j]==1 && grid2[i][j]==1 && DFS(grid1,grid2,i,j)) 
+                    ans+=1;
+            }
+        }
+        return ans;
+    }
+
+    int DFS(vector<vector<int>>& grid1,vector<vector<int>>& grid2,int i,int j){
+        int m=grid1.size();
+        int n=grid1[0].size();
+        //grid2是海也可以看作grid1的子岛屿
+        if(i<0||i>= m||j<0||j>=n||grid2[i][j]==0)
+            return 1;
+        if(grid1[i][j]==0)//grid2是陆地而grid1是海，则不是子岛屿
+            return 0;
+        grid2[i][j]=0;
+        return DFS(grid1,grid2,i + 1,j)&DFS(grid1,grid2,i - 1,j)&DFS(grid1,grid2,i,j+1)&DFS(grid1,grid2,i,j-1);
+        
+    }
+};
+```
+
+##### [695. 岛屿的最大面积](https://leetcode.cn/problems/max-area-of-island/)
+
+```C++
+//边缘是水
+//和200.岛屿数量很像，DFS
+class Solution {
+public:
+    int maxAreaOfIsland(vector<vector<int>>& grid) {
+        if (grid.empty()||grid[0].empty()) 
+            return 0;
+        int m=grid.size(), n=grid[0].size(), ans = 0;
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(grid[i][j]==0)
+                    continue;
+                int cnt=0;//记录每次DFS的最大值
+                DFS(grid,i,j,cnt);//每次DFS将一个陆地联通子图全部修改成海洋
+                ans=max(ans,cnt);
+            }
+        }
+        return ans;
+    }
+
+    void DFS(vector<vector<int>>& grid,int x,int y,int& cnt){
+        int m=grid.size(), n=grid[0].size();
+        if(x<0||x>=m||y<0||y>=n||grid[x][y]==0)
+            return;
+        ++cnt;
+        grid[x][y]=0;//将访问过的陆地修改为海洋
+        DFS(grid,x-1,y,cnt);
+        DFS(grid,x+1,y,cnt);
+        DFS(grid,x,y-1,cnt);
+        DFS(grid,x,y+1,cnt);
+    }
+};
+
+//BFS写法
 ```
 
 
