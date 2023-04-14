@@ -1811,23 +1811,6 @@ public:
 
 //迭代BFS
 bool inq[MAXV]={false};//此处inq与vis含义不同，inq是记录入队过的节点，因为节点可能在队中但还未访问，如果表示vis的含义，那么可能重复访问
-void BFS(int x){
-	queue<int> q;
-	q.push(x);//第一步，将x入队
-	inq[x]=true;
-	while(!q.empty()){//队非空时循环
-		int u=q.front();
-		q.pop();
-		visit(u);
-		for(int i=0;i<G[u].size();i++){
-			int v=G[u][i];
-			if(inq[v]==false){
-				q.push(v);
-				inq[v]=true;
-			}
-		}
-	}
-}
 class Solution {
 public:
     int numEnclaves(vector<vector<int>>& grid) {
@@ -1997,6 +1980,87 @@ public:
 };
 
 //BFS写法
+```
+
+##### [130. 被围绕的区域](https://leetcode.cn/problems/surrounded-regions/)
+
+```C++
+
+//正向的思路，看联通分量图是否达到边界，只用到一次循环
+class Solution {
+public:
+    int closedIsland(vector<vector<int>>& grid) {
+        int res = 0, m = grid.size(), n = grid[0].size();
+        for (int i = 0; i < m; ++i) {
+            for (int j = 0; j < n; ++j) {
+                if (grid[i][j] == 0) 
+                    res += DFS(grid, i, j);
+            }
+        }
+        return res;
+    }
+    int DFS(vector<vector<int>>& grid, int i, int j) {
+        int m = grid.size(), n = grid[0].size();
+        if (i < 0 || i >= m || j < 0 || j >= n)
+            return 0;
+        if (grid[i][j] > 0)
+            return 1;
+        grid[i][j] = 1;
+        return DFS(grid, i + 1, j)&DFS(grid, i - 1, j)&DFS(grid, i, j + 1)&DFS(grid, i, j - 1);//只要有一个触碰到边界，则返回0
+    }
+};
+
+//思路和1020类似
+class Solution {
+public:
+    void solve(vector<vector<char>>& board) {
+        int m=board.size();
+        int n=board[0].size();
+        //将边缘上的O连通的区域都转成$
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(i==0||j==0||i==m-1||j==n-1&&board[i][j]=='O')
+                    DFS(board,i,j);
+            }
+        }
+        //修改board
+        for (int i=0;i<m;++i) {
+            for (int j=0;j<n;++j) {
+                //将所有被X包围的O改成X
+                if (board[i][j]=='O') 
+                    board[i][j]='X';
+                //将边界上的O改回去
+                if (board[i][j]=='$')
+                    board[i][j]='O';
+            }
+        }
+    }
+    
+    //将O转化为$的DFS
+    void DFS(vector<vector<char>>& board,int i,int j){
+        int m=board.size();
+        int n=board[0].size();
+        if(board[i][j]=='O'){
+            board[i][j]='$';
+            if(i>0&&board[i-1][j]=='O')
+                DFS(board,i-1,j);
+            if(i<m-1&&board[i+1][j]=='O')
+                DFS(board,i+1,j);
+            if(j>0&&board[i][j-1]=='O')
+                DFS(board,i,j-1);
+            if(j<n-1&&board[i][j+1]=='O')
+                DFS(board,i,j+1);
+        }    
+    }
+};
+
+//并查集做法
+```
+
+##### [面试题13. 机器人的运动范围](https://leetcode.cn/problems/ji-qi-ren-de-yun-dong-fan-wei-lcof/)
+
+```C++
+
 ```
 
 
@@ -3836,9 +3900,34 @@ public:
 };
 ```
 
+##### [576. 出界的路径数](https://leetcode.cn/problems/out-of-boundary-paths/)
 
+```C++
+//递归可能爆栈，所以用dp
+//DFS思路
+//dp[k][i][j]表示总共走k步，从(i,j)位置走出边界的总路径数。走k步出边界的总路径数等于其周围四个位置的走k-1步出边界的总路径数之和
+class Solution {
+public:
+    int findPaths(int m, int n, int maxMove, int startRow, int startColumn) {
+        vector<vector<vector<int>>> dp(maxMove + 1, vector<vector<int>>(m, vector<int>(n, 0)));//dp[k][i][j]表示总共走k步，从(i,j)位置走出边界的总路径数。
+        for(int k=1;k<=maxMove;++k){
+            for(int x=0;x<m;++x){
+                for(int y=0;y<n;++y){
+                    long v1=(x==0)?1:dp[k-1][x-1][y];
+                    long v2=(x==m-1)?1:dp[k-1][x+1][y];
+                    long v3=(y==0)?1:dp[k-1][x][y-1];
+                    long v4=(y==n-1)?1:dp[k-1][x][y+1];
+                    dp[k][x][y]=(v1+v2+v3+v4) % 1000000007;
+                }
+            }
+        }
+        return dp[maxMove][startRow][startColumn];
+    }
+};
 
-## 滑动窗口
+```
+
+## 
 
 ### LeetCode
 
