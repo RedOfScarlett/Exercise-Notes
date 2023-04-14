@@ -88,11 +88,12 @@ void postOrder(node* root){
 ```c++
 //层次遍历
 void levelOrder(node *root){
-	queue<int> q;
+    if(!root)
+        return;
+	queue<node*> q;
 	q.push(root);
-	node* temp=NULL;
 	while(!q.empty()){
-		temp=q.front();
+		node* temp=q.front();
 		q.pop();
 		vist(temp);
 		if(temp->lchild)
@@ -994,12 +995,13 @@ bool cmp(edge a,edge b){
 }
 //并查集，用来判断测试的边的两端是否在不同连通块中
 int father[MAXV];
+//构造并查集的核心算法
 int findFather(int v){
-	if(v==father[v]){
+	if(v==father[v]){//根节点的父亲是自身
 		return v;
 	}else{
 		int F=findFather(father[v]);
-		father[v]=F;//路径压缩
+		father[v]=F;//路径压缩，把树压扁，所有节点都有同一个父亲
 		return F;
 	}
 }
@@ -1010,12 +1012,12 @@ int kruskal(int n,int m){//n个节点m条边
 	for(int i=0;i<n;i++)//节点编号0~n-1
 		father[i]=i;
 	sort(E,E+m,cmp);//sort传函数指针
-	for(int i=0;i<m;i++){
+	for(int i=0;i<m;i++){//检查每条边的头尾是否有同一个父亲
 		int faH=findFather(E[i].h);
 		int faT=findFather(E[i].t);
-		if(faH!=faT){
+		if(faH!=faT){//合并两棵不联通的树
 			father[faT]=faH;
-			ans+=E[i].dis;
+			ans+=E[i].dis;//累加边权
 			cnt++;
 			if(cnt==n-1)//边数等于顶点数-1时说明树已生成
 				return ans;
@@ -1494,6 +1496,72 @@ public:
 
 ### LeetCode
 
+##### [102. 二叉树的层序遍历](https://leetcode.cn/problems/binary-tree-level-order-traversal/)
+
+```C++
+//层次遍历
+class Solution {
+public:
+    vector<vector<int>> levelOrder(TreeNode* root) {
+        if(!root)//判空不能少
+            return {};
+        vector<vector<int>> ans; 
+        queue<TreeNode*> q;
+        q.push(root);        
+        while(!q.empty()){
+            vector<int> level;
+            for(int i=q.size();i>0;i--){//迭代到q中只剩一个元素，这个元素是每一层的第一个元素
+                TreeNode* temp=q.front();
+                q.pop();
+                level.push_back(temp->val);
+                if (temp->left)
+                    q.push(temp->left);
+                if (temp->right)
+                    q.push(temp->right);
+            }
+            ans.push_back(level);
+        }
+        return ans;
+    }
+};
+```
+
+##### [103. 二叉树的锯齿形层序遍历](https://leetcode.cn/problems/binary-tree-zigzag-level-order-traversal/)
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> zigzagLevelOrder(TreeNode* root) {
+        if(!root)//判空不能少
+            return {};
+        vector<vector<int>> ans; 
+        queue<TreeNode*> q;
+        q.push(root);
+        bool flag=false;//是否从右到左的标志位        
+        while(!q.empty()){
+            list<int> level;//利用list可以push_front的特性
+            for(int i=q.size();i>0;i--){//迭代到q中只剩一个元素，这个元素是每一层的第一个元素
+                TreeNode* temp=q.front();
+                q.pop();
+                if(flag==false)//从左到右
+                    level.push_back(temp->val);
+                else//从右到左
+                    level.push_front(temp->val);
+                if (temp->left)
+                    q.push(temp->left);
+                if (temp->right)
+                    q.push(temp->right);
+            }
+            ans.push_back(vector<int>(level.begin(),level.end()));//将list转成vector
+            flag^=true;//异或操作，每层结束翻转标志位
+        }
+        return ans;
+    }
+};
+```
+
+
+
 ##### [104. 二叉树的最大深度](https://leetcode.cn/problems/maximum-depth-of-binary-tree/)
 
 ```C++
@@ -1616,9 +1684,7 @@ public:
 
 
 
-## 暴力搜索
-
-## DFS
+## 暴力搜索 DFS/BFS
 
 ### LeetCode
 
@@ -1985,31 +2051,7 @@ public:
 ##### [130. 被围绕的区域](https://leetcode.cn/problems/surrounded-regions/)
 
 ```C++
-
-//正向的思路，看联通分量图是否达到边界，只用到一次循环
-class Solution {
-public:
-    int closedIsland(vector<vector<int>>& grid) {
-        int res = 0, m = grid.size(), n = grid[0].size();
-        for (int i = 0; i < m; ++i) {
-            for (int j = 0; j < n; ++j) {
-                if (grid[i][j] == 0) 
-                    res += DFS(grid, i, j);
-            }
-        }
-        return res;
-    }
-    int DFS(vector<vector<int>>& grid, int i, int j) {
-        int m = grid.size(), n = grid[0].size();
-        if (i < 0 || i >= m || j < 0 || j >= n)
-            return 0;
-        if (grid[i][j] > 0)
-            return 1;
-        grid[i][j] = 1;
-        return DFS(grid, i + 1, j)&DFS(grid, i - 1, j)&DFS(grid, i, j + 1)&DFS(grid, i, j - 1);//只要有一个触碰到边界，则返回0
-    }
-};
-
+//和边界相邻不算岛屿
 //思路和1020类似
 class Solution {
 public:
@@ -2054,18 +2096,109 @@ public:
     }
 };
 
-//并查集做法
+
+//正向的思路和1254类似，但是需要借助visited数组
+class Solution {
+public:
+    void solve(vector<vector<char>>& board) {
+        int m = board.size(), n = board[0].size();
+        vector<vector<bool>> visited(m,vector<bool>(n,false));//记录点是否被访问过
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(board[i][j]=='O'){//对被包围区域的修改要放在DFS外做
+                    vector<pair<int,int>> fills;
+                    if(DFS(board,i,j,fills,visited)){//是被包围区域
+                        for(auto fill:fills){
+                            board[fill.first][fill.second]='X';
+                        }
+                    }
+                }                    
+            }
+        }
+    }
+
+    int DFS(vector<vector<char>>& board, int i, int j,vector<pair<int,int>>& fills,vector<vector<bool>>& visited) {
+        int m = board.size(), n = board[0].size();
+        if(i<0||i>=m||j<0||j>=n)//碰到边界不算被包围
+            return 0;
+        if(board[i][j]=='X'||visited[i][j]==true)//碰到非边界且为X或访问过该位置，说明这条路到头了，返回1
+            return 1;
+        fills.push_back({i,j});//记录需要修改的坐标
+        visited[i][j]=true;//标记防止走回头路，然后继续搜索
+        return DFS(board, i + 1, j, fills, visited)&DFS(board, i - 1, j, fills, visited)&DFS(board, i, j + 1, fills, visited)&DFS(board, i, j - 1, fills, visited);//只要有一条路径触碰到边界，则返回0
+    }
+};
+
+
+//并查集：用连接所有边界上的O，然后遍历board中所有的O，所有与边界上的O连通的O不予修改，其余的修改成X
+//注意压平后遍历是n*i+j，不要写成m*i+j了
+class Solution {
+public:
+    void solve(vector<vector<char>>& board) {
+        int m = board.size(), n = board[0].size();
+        int super=m*n;
+        vector<int> father(m*n+1);//把二维数组压扁然后才好用并查集,并且加一个超级节点记录边缘的O
+        father[super]=super;
+        //初始化并查集
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(board[i][j]=='O'){
+                    if(i==0||j==0||i==m-1||j==n-1){           
+                        father[n*i+j]=super;//所有边缘上的O并入super)
+                    }else{
+                        father[n*i+j]=n*i+j;//将非边缘的O初始化入并查集
+                    }
+                }
+            }
+        }
+        //对所有O进行连接
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(board[i][j]=='O'){
+                    if(j+1<n&&board[i][j+1]=='O')
+                        Union(father,i*n+j,i*n+j+1,super);//并入右侧O
+                    if(i+1<m&&board[i+1][j]=='O')
+                        Union(father,i*n+j,(i+1)*n+j,super);//并入下侧O
+                }                
+            }
+        }
+        //最后一次遍历修改board
+        for(int i=1;i<m-1;i++)
+            for(int j=1;j<n-1;j++)
+                if(board[i][j]=='O')
+                    if(findFather(father,n*i+j)!=super)
+                        board[i][j]='X';                                          
+    }
+
+    int findFather(vector<int>& father,int v){
+        if(v==father[v]){
+            return v;
+        }else{
+            int f=findFather(father,father[v]);
+            father[v]=f;
+            return f;
+        }
+    }
+
+    void Union(vector<int>& father, int x, int y, int super) {
+        int fx=findFather(father,x), fy=findFather(father,y);
+        if(fx==fy)
+            return;
+        if(fy==super)
+            father[fx]=fy;
+        else
+            father[fy]=fx;
+    }
+
+    bool isConnected(vector<int>& father,int x,int y){
+        return findFather(father,x)==findFather(father,y);
+    }
+};
 ```
 
-##### [面试题13. 机器人的运动范围](https://leetcode.cn/problems/ji-qi-ren-de-yun-dong-fan-wei-lcof/)
-
-```C++
-
-```
 
 
-
-## 回溯
+## 回溯 
 
 ### 核心问题
 
