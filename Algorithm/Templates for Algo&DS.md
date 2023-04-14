@@ -1499,7 +1499,7 @@ public:
 ##### [102. 二叉树的层序遍历](https://leetcode.cn/problems/binary-tree-level-order-traversal/)
 
 ```C++
-//层次遍历
+//层次遍历，关键在于那个for循环的写法
 class Solution {
 public:
     vector<vector<int>> levelOrder(TreeNode* root) {
@@ -1525,6 +1525,43 @@ public:
     }
 };
 ```
+
+##### [107. 二叉树的层序遍历 II](https://leetcode.cn/problems/binary-tree-level-order-traversal-ii/)
+
+```C++
+//自下而上，自左而右，用stack导一下就行，送分题
+class Solution {
+public:
+    vector<vector<int>> levelOrderBottom(TreeNode* root) {
+        if(!root)//判空不能少
+            return {};
+        stack<vector<int>> st;
+        vector<vector<int>> ans; 
+        queue<TreeNode*> q;
+        q.push(root);        
+        while(!q.empty()){
+            vector<int> level;
+            for(int i=q.size();i>0;i--){//迭代到q中只剩一个元素，这个元素是每一层的第一个元素
+                TreeNode* temp=q.front();
+                q.pop();
+                level.push_back(temp->val);
+                if (temp->left)
+                    q.push(temp->left);
+                if (temp->right)
+                    q.push(temp->right);
+            }
+            st.push(level);
+        }
+        while(!st.empty()){
+            ans.push_back(st.top());
+            st.pop();
+        }
+        return ans;
+    }
+};
+```
+
+
 
 ##### [103. 二叉树的锯齿形层序遍历](https://leetcode.cn/problems/binary-tree-zigzag-level-order-traversal/)
 
@@ -1558,6 +1595,114 @@ public:
         return ans;
     }
 };
+```
+
+##### [1609. 奇偶树](https://leetcode.cn/problems/even-odd-tree/)
+
+```C++
+//偶数下标 层上的所有节点的值都是 奇 整数，从左到右按顺序 严格递增
+//奇数下标 层上的所有节点的值都是 偶 整数，从左到右按顺序 严格递减
+//上一题改一下就行
+class Solution {
+public:
+    bool isEvenOddTree(TreeNode* root) {
+        if(!root)//判空不能少
+            return true;
+        queue<TreeNode*> q;
+        q.push(root);
+        bool odd=false;//奇偶层标志位,根节点算偶数层      
+        while(!q.empty()){
+            vector<int> level;
+            for(int i=q.size();i>0;i--){//迭代到q中只剩一个元素，这个元素是每一层的第一个元素
+                TreeNode* temp=q.front();
+                q.pop();
+                if(odd==false){//偶数层，奇数，单增
+                    if(!level.empty()&&level.back()>=temp->val||((temp->val&1)!=1))
+                        return false;    
+                }else{//奇数数层，偶数，单减
+                    if(!level.empty()&&level.back()<=temp->val||((temp->val&1)==1))
+                        return false;                   
+                }
+                level.push_back(temp->val);  
+                if (temp->left)
+                    q.push(temp->left);
+                if (temp->right)
+                    q.push(temp->right);
+            }
+            odd^=1;
+        }
+        return true;
+    }
+};
+```
+
+##### [1161. 最大层内元素和](https://leetcode.cn/problems/maximum-level-sum-of-a-binary-tree/)
+
+```C++
+//板子稍微改改，送分
+class Solution {
+public:
+    int maxLevelSum(TreeNode* root) {      
+        if(!root)//判空不能少
+            return 0;
+        queue<TreeNode*> q;
+        q.push(root);
+        int ans=1;
+        int levelNum=0;
+        int maxSum=root->val;
+        while(!q.empty()){
+            ++levelNum;
+            int sum=0;
+            for(int i=q.size();i>0;i--){//迭代到q中只剩一个元素，这个元素是每一层的第一个元素
+                TreeNode* temp=q.front();
+                q.pop();
+                sum+=temp->val;
+                if (temp->left)
+                    q.push(temp->left);
+                if (temp->right)
+                    q.push(temp->right);
+            }
+            if(sum>maxSum){
+                maxSum=sum;
+                ans=levelNum;
+            }
+        }
+        return ans;
+    }
+};
+```
+
+##### [1302. 层数最深叶子节点的和](https://leetcode.cn/problems/deepest-leaves-sum/)
+
+```C++
+//上题改改
+class Solution {
+public:
+    int deepestLeavesSum(TreeNode* root) {
+        if(!root)//判空不能少
+            return 0;
+        queue<TreeNode*> q;
+        q.push(root);
+        int ans=0;
+        while(!q.empty()){
+            int sum=0;
+            for(int i=q.size();i>0;i--){//迭代到q中只剩一个元素，这个元素是每一层的第一个元素
+                TreeNode* temp=q.front();
+                q.pop();
+                sum+=temp->val;
+                if (temp->left)
+                    q.push(temp->left);
+                if (temp->right)
+                    q.push(temp->right);
+            }
+           ans=sum;
+        }
+        return ans;
+    }
+};
+
+
+//DFS做法更快
 ```
 
 
