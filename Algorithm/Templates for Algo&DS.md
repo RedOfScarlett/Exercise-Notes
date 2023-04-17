@@ -913,6 +913,10 @@ void Dijkstra(int s){//每次从未访问过的可访问结点中取离原点最
 }
 ```
 
+#### A*搜索
+
+[路径规划之 A* 算法](https://zhuanlan.zhihu.com/p/54510444)
+
 #### 递归求最短路径
 
 ```c++
@@ -944,6 +948,8 @@ void Floyd(){
 					dis[i][j]=dis[i][k]+dis[k][j];
 }
 ```
+
+
 
 ### 最小生成树
 
@@ -2683,6 +2689,44 @@ public:
         return -1;
     }
 };
+```
+
+##### [1091. 二进制矩阵中的最短路径](https://leetcode.cn/problems/shortest-path-in-binary-matrix/)
+
+```C++
+//迷宫遍历求最少步数，BFS
+class Solution {
+public:
+    int shortestPathBinaryMatrix(vector<vector<int>>& grid) {
+        if(grid[0][0]==1)
+            return -1;
+        int ans=0,n=grid.size();
+        queue<pair<int,int>> q;
+        q.push({0,0});
+        set<pair<int,int>> visited{{0,0}};
+        vector<pair<int,int>> dirs{{-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}};
+        while(!q.empty()){
+            ++ans;//while控制的是BFS出的一圈，每圈+1
+            for(int i=q.size();i>0;--i){
+                auto point=q.front();
+                q.pop();
+                if(point.first==n-1&&point.second==n-1)
+                    return ans;
+                for(auto dir:dirs){
+                    int x=point.first+dir.first;
+                    int y=point.second+dir.second;
+                    if(x<0||x>=n||y<0||y>=n||grid[x][y]==1||visited.count({x,y}))
+                        continue;
+                    q.push({x,y});
+                    visited.insert({x,y});            
+                }
+            }
+        }
+        return -1;
+    }
+};
+
+//A*搜索
 ```
 
 
