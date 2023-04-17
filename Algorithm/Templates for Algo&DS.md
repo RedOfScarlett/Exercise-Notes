@@ -1526,6 +1526,33 @@ public:
 };
 ```
 
+##### [429. N 叉树的层序遍历](https://leetcode.cn/problems/n-ary-tree-level-order-traversal/)
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> levelOrder(Node* root) {
+        if (!root) return {};
+        vector<vector<int>> res;
+        queue<Node*> q{{root}};
+        while (!q.empty()) {
+            vector<int> out;
+            for (int i = q.size(); i > 0; --i) {
+                auto t = q.front(); q.pop();
+                out.push_back(t->val);
+                if (!t->children.empty()) {
+                    for (auto a : t->children) q.push(a);//遍历每个孩子
+                }
+            }
+            res.push_back(out);
+        }
+        return res;
+    }
+};
+```
+
+
+
 ##### [107. 二叉树的层序遍历 II](https://leetcode.cn/problems/binary-tree-level-order-traversal-ii/)
 
 ```C++
@@ -1636,10 +1663,44 @@ public:
 };
 ```
 
+##### [637. 二叉树的层平均值](https://leetcode.cn/problems/average-of-levels-in-binary-tree/)
+
+```C++
+//BFS
+class Solution {
+public:
+    vector<double> averageOfLevels(TreeNode* root) {
+        if(!root)
+            return {};
+        vector<double> ans; 
+        queue<TreeNode*> q({root});     
+        while(!q.empty()){
+            double sum=0;
+            int n=q.size();
+            for(int i=0;i<n;i++){
+                TreeNode* temp=q.front();
+                q.pop();
+                sum+=temp->val;
+                if (temp->left)
+                    q.push(temp->left);
+                if (temp->right)
+                    q.push(temp->right);
+            }
+            ans.push_back(sum/n);
+        }
+        return ans;
+    }
+};
+
+//DFS,计算出每层sum和节点数，最后一个循环算出每层均值
+```
+
+
+
 ##### [1161. 最大层内元素和](https://leetcode.cn/problems/maximum-level-sum-of-a-binary-tree/)
 
 ```C++
-//板子稍微改改，送分
+//BFS板子稍微改改，送分
 class Solution {
 public:
     int maxLevelSum(TreeNode* root) {      
@@ -1668,6 +1729,27 @@ public:
             }
         }
         return ans;
+    }
+};
+
+//DFS
+//用一个数组 sums 来记录每一层的结点值之和。
+class Solution {
+public:
+    int maxLevelSum(TreeNode* root) {
+        vector<int> sums;
+        DFS(root, 1, sums);
+        //distance计算两个迭代器之间的距离
+        return distance(sums.begin(), max_element(sums.begin(), sums.end())) + 1;
+    }
+    void DFS(TreeNode* node, int level, vector<int>& sums) {
+        if (!node)
+            return;
+        if (sums.size()<level)
+            sums.resize(level);//因为层数是动态变化的，因此需要动态增加sums的大小
+        sums[level - 1] += node->val;
+        DFS(node->left, level + 1, sums);
+        DFS(node->right, level + 1, sums);
     }
 };
 ```
@@ -1703,6 +1785,133 @@ public:
 
 
 //DFS做法更快
+class Solution {
+public:
+    int deepestLeavesSum(TreeNode* root) {
+        int deep=0;
+        int sum=0;
+        DFS(root,0,deep,sum);
+        return sum;
+    }
+
+    void DFS(TreeNode* root,int level,int &deep,int& sum){
+        if(!root)
+            return;
+        if(level>deep){
+            deep=level;
+            sum=root->val;
+        }else if(level==deep){
+            sum+=root->val;
+        }
+        DFS(root->left,level+1,deep,sum);
+        DFS(root->right,level+1,deep,sum);
+    }
+};
+```
+
+##### [958. 二叉树的完全性检验](https://leetcode.cn/problems/check-completeness-of-a-binary-tree/)
+
+```C++
+//BFS，用一个标志位记录是否遇到空节点，遇到空节点后继续遍历，若还有非空节点就返回false
+class Solution {
+public:
+    bool isCompleteTree(TreeNode* root) {
+        bool flag=false;//是否遇到空节点
+        queue<TreeNode*> q({root});
+        while(!q.empty()){
+            TreeNode* temp=q.front();
+            q.pop();
+            if(!temp){//遇到空节点
+                flag=true;
+            }else{//遇到非空节点
+                if(flag)//之前已经遇到过空节点，说明不是完全二叉树
+                    return false;
+                q.push(temp->left);
+                q.push(temp->right);
+            }
+        }
+        return true;
+    }
+};
+```
+
+##### [111. 二叉树的最小深度](https://leetcode.cn/problems/minimum-depth-of-binary-tree/)
+
+```C++
+//BFS,遍历到第一个叶节点就返回最小深度
+class Solution {
+public:
+    int minDepth(TreeNode* root) {
+        if(!root)
+            return 0;
+        int ans=0;//记录层数
+        queue<TreeNode*> q({root});
+        while(!q.empty()){
+            ++ans;
+            for(int i=q.size();i>0;i--){
+                TreeNode* temp=q.front();
+                q.pop();
+                if(!temp->left&&!temp->right)
+                    return ans;
+                if(temp->left)
+                    q.push(temp->left);
+                if(temp->right)
+                    q.push(temp->right);
+            }
+        }
+        return -1;
+    }
+};
+
+//DFS
+class Solution {
+public:
+    int minDepth(TreeNode* root) {
+        if(!root)
+            return 0;
+        //+1是当前层
+        if(!root->left)
+            return 1+minDepth(root->right);
+        if(!root->right)
+            return 1+minDepth(root->left);
+        return 1+min(minDepth(root->left),minDepth(root->right));
+    }
+};
+```
+
+##### [919. 完全二叉树插入器](https://leetcode.cn/problems/complete-binary-tree-inserter/)
+
+```C++
+class CBTInserter {
+public:
+    CBTInserter(TreeNode* root) {
+        tree.push_back(root);
+        for (int i = 0; i < tree.size(); ++i) {
+            if (tree[i]->left)
+                tree.push_back(tree[i]->left);
+            if (tree[i]->right)
+                tree.push_back(tree[i]->right);
+        }
+    }
+    
+    int insert(int v) {
+        TreeNode *node = new TreeNode(v);
+        int n = tree.size();//n即插入节点的idx
+        int fatherIdx=(n-1)>>1;//计算新插入节点的父节点位置
+        tree.push_back(node);
+        if (n&1)//奇数节点挂在父节点的左孩子
+            tree[fatherIdx]->left = node;
+        else//偶数节点挂在父节点的右孩子
+            tree[fatherIdx]->right = node;
+        return tree[fatherIdx]->val;//返回父节点的值
+    }
+    
+    TreeNode* get_root() {
+        return tree[0];
+    }
+private:
+    vector<TreeNode*> tree;//使用vector而不是queue，因为完全二叉树可以通过下标(i-1)/2来找到父节点
+};
 ```
 
 
@@ -2337,6 +2546,141 @@ public:
 
     bool isConnected(vector<int>& father,int x,int y){
         return findFather(father,x)==findFather(father,y);
+    }
+};
+```
+
+##### [542. 01 矩阵](https://leetcode.cn/problems/01-matrix/)
+
+```C++
+//多源BFS
+class Solution {
+public:
+    vector<vector<int>> updateMatrix(vector<vector<int>>& mat) {
+        int m=mat.size();
+        int n=mat[0].size();
+        vector<vector<int>> dirs{{0,-1},{-1,0},{0,1},{1,0}};
+        queue<pair<int,int>> q;
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(mat[i][j]==0)//所有0入队
+                    q.push({i,j});
+                else
+                    mat[i][j]=INT_MAX;
+            }
+        }
+        while(!q.empty()){
+            auto t=q.front();
+            q.pop();
+            for(auto dir:dirs){
+                int x=t.first+dir[0];
+                int y=t.second+dir[1];
+                if(x<0||x>=m||y<0||y>=n||mat[x][y]<=mat[t.first][t.second]+1)//越界或者周围点的值小于等于当前值加1，则跳过。周围点的距离更小的话，就没有更新的必要
+                    continue;
+                mat[x][y]=mat[t.first][t.second]+1;//本质思想就是记忆化搜索
+                q.push({x,y});
+            }
+        }
+        return mat;
+    }
+};
+
+//复习的时候可以看一下DP和DFS做法
+```
+
+##### ！[752. 打开转盘锁](https://leetcode.cn/problems/open-the-lock/)
+
+```C++
+class Solution {
+public:
+    string plusOne(string s,int j){
+        if(s[j]=='9')
+            s[j]='0';
+        else
+            s[j]+=1;
+        return s;
+    }
+    string minusOne(string s,int j){
+        if(s[j]=='0')
+            s[j]='9';
+        else
+            s[j]-=1;
+        return s;
+    }
+    int openLock(vector<string>& deadends, string target) {
+        set<string> deads(deadends.begin(),deadends.end());
+        // for(auto &s:deadends)
+        //     deads.insert(s);
+        set<string> q1,q2,visited;
+        //q1和q2分别是入口和出口，通过双向BFS，两个q相互靠近，有交集时找到答案。
+        q1.insert("0000");
+        q2.insert(target);
+        int step=0;
+        while(!q1.empty()&&!q2.empty()){
+            set<string> temp;//存储q1的扩散结果，因为遍历过程中不修改哈希集合
+            for(auto &cur:q1){//BFS q1中的元素
+                if(deads.find(cur)!=deads.end())
+                    continue;
+                if(q2.find(cur)!=q2.end())//双向BFS,q1和q2有交集时停止
+                    return step;
+                visited.insert(cur);
+                for(int j=0;j<4;j++){//分别对每一位进行加和减，因为每次旋转都只能旋转一个拨轮的一位数字。
+                    string up=plusOne(cur,j);
+                    if(visited.find(up)==visited.end())
+                        temp.insert(up);
+                    string down=minusOne(cur,j);
+                    if(visited.find(down)==visited.end())
+                        temp.insert(down);
+                }
+            }
+            step++;
+            //双向BFS
+            q1=q2;
+            q2=temp;
+        }
+        return -1;
+    }
+};
+```
+
+##### [773. 滑动谜题](https://leetcode.cn/problems/sliding-puzzle/)
+
+```C++
+class Solution {
+public:
+    int slidingPuzzle(vector<vector<int>>& board) {
+        int m=2,n=3;
+        int step=0;
+        string start="";
+        string target="123450";
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                start+=board[i][j];
+            }
+        }        
+        vector<vector<int>> neighbor={{1,3},{0,4,2},{1,5},{0,4},{3,1,5},{4,2}};//记录二维数组下标相邻位置的表，即遍历方向
+        queue<string> q({start});
+        unordered_set<string> visited(start);
+        while(!q.empty()){
+            for(int i=0;i<q.size();i++){
+                string cur=q.front();
+                q.pop();
+                if(target==cur)
+                    return step;
+                int idx=0;
+                for(;cur[idx]!='0';idx++);//找到'0'的索引
+                for(auto adj:neighbor[idx]){
+                    string new_board(cur);//记录当前bord的状态
+                    swap(new_board[adj],new_board[idx]);
+                    if(!visited.count(new_board)){//当前board状态没出现过
+                        q.push(new_board);
+                        visited.insert(new_board);
+                    }
+                }
+            }
+            step++;
+        }
+        return -1;
     }
 };
 ```
@@ -4205,7 +4549,7 @@ public:
 
 ```
 
-## 
+## 滑动窗口
 
 ### LeetCode
 
