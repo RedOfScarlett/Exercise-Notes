@@ -2202,6 +2202,21 @@ public:
 };
 ```
 
+##### [100. 相同的树](https://leetcode.cn/problems/same-tree/)
+
+```C++
+class Solution {
+public:
+    bool isSameTree(TreeNode* p, TreeNode* q) {
+        if(!p&&!q)
+            return true;
+        if((!p&&1)||(p&&!q)||(p->val!=q->val))
+            return false;
+        return isSameTree(p->left,q->left)&&isSameTree(p->right,q->right);
+    }
+};
+```
+
 
 
 ## 暴力搜索 DFS/BFS
