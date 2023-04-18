@@ -1502,6 +1502,166 @@ public:
 
 ### LeetCode
 
+##### [144. 二叉树的前序遍历](https://leetcode.cn/problems/binary-tree-preorder-traversal/)
+
+```C++
+//递归
+class Solution {
+public:
+    vector<int> preorderTraversal(TreeNode* root) {
+        vector<int> ans;
+        preorder(root,ans);
+        return ans;
+    }
+
+    void preorder(TreeNode* root, vector<int>& ans){
+        if(!root)
+            return;
+        ans.push_back(root->val);
+        preorder(root->left,ans);
+        preorder(root->right,ans);
+    }
+};
+
+//非递归
+//沿着左子树往下访问，同时将访问节点的右孩子入栈
+class Solution {
+public:
+    vector<int> preorderTraversal(TreeNode* root) {
+        stack<TreeNode*> st;
+        vector<int> ans;
+        TreeNode *p=root;
+        while(1){
+            vistAlongLeftBranch(p,st,ans);
+            if(st.empty())
+                break;
+            p=st.top();
+            st.pop();
+        }
+        return ans;
+    }
+    //沿着左子树往下访问，同时将访问节点的右孩子入栈
+    void vistAlongLeftBranch(TreeNode* root, stack<TreeNode*>& st,vector<int>& ans){
+        while(root){
+            ans.push_back(root->val);
+            // cout<<root->val<<" ";
+            st.push(root->right);
+            root=root->left;
+        }
+    }
+};
+```
+
+
+
+##### [94. 二叉树的中序遍历](https://leetcode.cn/problems/binary-tree-inorder-traversal/)
+
+```C++
+//递归
+class Solution {
+public:
+    vector<int> inorderTraversal(TreeNode* root) {
+        vector<int> ans;
+        inorder(root,ans);
+        return ans;
+    }
+
+    void inorder(TreeNode* root, vector<int>& ans){
+        if(!root)
+            return;
+        inorder(root->left,ans);
+        ans.push_back(root->val);
+        inorder(root->right,ans);
+    }
+};
+
+//非递归
+//将左分支依次入栈，出栈时访问节点并将其右子树按同样方式入栈
+class Solution {
+public:
+    vector<int> inorderTraversal(TreeNode* root) {
+        stack<TreeNode*> st;
+        TreeNode* p=root;
+        vector<int> ans;
+        while(1){
+            goAlongLeftBranch(p,st);
+            if(st.empty())
+                break;
+            p=st.top();
+            st.pop();
+            ans.push_back(p->val);//在此处调用元素
+            p=p->right;
+        }
+        return ans;
+    }
+    //将左分支依次入栈，出栈时访问节点并将其右子树按同样方式入栈
+    void goAlongLeftBranch(TreeNode* root,stack<TreeNode*>& st){
+        //中序不在该函数内visit，而是在出栈时visit
+        while(root){
+            st.push(root);
+            root=root->left;
+        }
+    }
+};
+```
+
+##### [145. 二叉树的后序遍历](https://leetcode.cn/problems/binary-tree-postorder-traversal/)
+
+```C++
+//递归
+class Solution {
+public:
+    vector<int> postorderTraversal(TreeNode* root) {
+        vector<int> ans;
+        postorder(root,ans);
+        return ans;
+    }
+
+    void postorder(TreeNode* root, vector<int>& ans){
+        if(!root)
+            return;
+        postorder(root->left,ans);
+        postorder(root->right,ans);
+        ans.push_back(root->val);
+    }
+};
+
+//非递归
+//后序的逆序与先序对称
+//按中右左入栈，出栈时即是左右中
+//将中右左形式的先序遍历的visit改成入ans栈，最后统一访问即可
+class Solution {
+public:
+    vector<int> postorderTraversal(TreeNode* root) {
+        stack<TreeNode*> st,temp;
+        vector<int> ans;
+        TreeNode* p=root;
+        while(1){
+            goAlongRightBranch(p,st,temp);
+            if(st.empty())
+                break;
+            p=st.top();
+            st.pop();
+        }
+        while(!temp.empty()){
+            ans.push_back(temp.top()->val);
+            temp.pop();
+        }
+        return ans;
+    }
+    
+    void goAlongRightBranch(TreeNode* root,stack<TreeNode*>& st,stack<TreeNode*>& temp){
+        while(root){
+            temp.push(root);//等同于先序中的visit()
+            st.push(root->left);//st存放右分支链的左孩子
+            root=root->right;
+        }
+    }
+};
+```
+
+
+
 ##### [102. 二叉树的层序遍历](https://leetcode.cn/problems/binary-tree-level-order-traversal/)
 
 ```C++
