@@ -2097,6 +2097,8 @@ public:
 
 ```
 
+
+
 ##### [559. N 叉树的最大深度](https://leetcode.cn/problems/maximum-depth-of-n-ary-tree/)
 
 ```C++
@@ -2133,6 +2135,38 @@ public:
     }
 };
 ```
+
+##### 
+
+##### [543. 二叉树的直径](https://leetcode.cn/problems/diameter-of-binary-tree/)
+
+```C++
+//两结点之间的路径长度是以它们之间边的数目表示，树的直径就是最大的路径长度
+//转换成计算某个节点的左右子树最大深度
+class Solution {
+public:
+    int diameterOfBinaryTree(TreeNode* root) {
+        if(!root)
+            return 0;
+        int ans=maxDepth(root->left)+maxDepth(root->right);
+        return max({ans,diameterOfBinaryTree(root->left),diameterOfBinaryTree(root->right)});//根节点和其最优子树的最大直径
+    }
+    int maxDepth(TreeNode* root){
+        if(!root)
+            return 0;
+        if(m.count(root))
+            return m[root];
+        int h=1+max(maxDepth(root->left),maxDepth(root->right));
+        m[root]=h;
+        return h;
+    }
+private:
+    unordered_map<TreeNode*,int> m;//节点和深度的映射关系，避免重复计算
+};
+
+```
+
+
 
 ##### [865. 具有所有最深节点的最小子树](https://leetcode.cn/problems/smallest-subtree-with-all-the-deepest-nodes/)（[1123. 最深叶节点的最近公共祖先](https://leetcode.cn/problems/lowest-common-ancestor-of-deepest-leaves/)）
 
@@ -2210,9 +2244,106 @@ public:
     bool isSameTree(TreeNode* p, TreeNode* q) {
         if(!p&&!q)
             return true;
-        if((!p&&1)||(p&&!q)||(p->val!=q->val))
+        if((!p&&q)||(p&&!q)||(p->val!=q->val))
             return false;
         return isSameTree(p->left,q->left)&&isSameTree(p->right,q->right);
+    }
+};
+```
+
+##### [572. 另一棵树的子树](https://leetcode.cn/problems/subtree-of-another-tree/)
+
+```C++
+//调用上一题的方法
+class Solution {
+public:
+    bool isSubtree(TreeNode* root, TreeNode* subRoot) {
+        if(!root)
+            return false;
+        if(isSameTree(root,subRoot))
+            return true;
+        return isSubtree(root->left,subRoot)||isSubtree(root->right,subRoot);
+    }
+
+    bool isSameTree(TreeNode* p, TreeNode* q) {
+        if(!p&&!q)
+            return true;
+        if((!p&&q)||(p&&!q)||(p->val!=q->val))
+            return false;
+        return isSameTree(p->left,q->left)&&isSameTree(p->right,q->right);
+    }
+};
+
+//序列化的方法
+//nullptr用"#"代替，且两个节点之间用","分隔
+class Solution {
+public:
+    bool isSubtree(TreeNode* s, TreeNode* t) {
+        ostringstream os1, os2;
+        serialize(s, os1);
+        serialize(t, os2);
+        return os1.str().find(os2.str()) != string::npos;
+    }
+    void serialize(TreeNode* node, ostringstream& os) {
+        if (!node) os << ",#";
+        else {
+            os << "," << node->val;
+            serialize(node->left, os);
+            serialize(node->right, os);
+        }
+    }
+};
+
+```
+
+##### [105. 从前序与中序遍历序列构造二叉树](https://leetcode.cn/problems/construct-binary-tree-from-preorder-and-inorder-traversal/)
+
+```C++
+class Solution {
+public:
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        return create(preorder,inorder,0,preorder.size()-1,0,inorder.size()-1);
+    }
+    
+    TreeNode* create(vector<int>& preorder, vector<int>& inorder,int preL,int preR,int inL,int inR){
+        if(preL>preR)
+            return nullptr;
+        TreeNode* root=new TreeNode(preorder[preL]);
+        int k;
+        for(k=inL;k<=inR;k++){
+            if(inorder[k]==preorder[preL])
+                break;
+        }
+        int numLeft=k-inL;//左子树的节点数量
+        root->left=create(preorder,inorder,preL+1,preL+numLeft,inL,k-1);
+	    root->right=create(preorder,inorder,preL+numLeft+1,preR,k+1,inR);
+	    return root;
+    }
+};
+```
+
+##### [106. 从中序与后序遍历序列构造二叉树](https://leetcode.cn/problems/construct-binary-tree-from-inorder-and-postorder-traversal/)
+
+```C++
+class Solution {
+public:
+    TreeNode* buildTree(vector<int>& inorder, vector<int>& postorder) {
+        return create(inorder,postorder,0,inorder.size()-1,0,postorder.size()-1);
+    }
+
+    TreeNode* create(vector<int>& inorder, vector<int>& postorder,int inL,int inR,int postL,int postR){
+        if(inL>inR||postL>postR)
+            return nullptr;
+        TreeNode* root=new TreeNode(postorder[postR]);//后续是左右中，最后一个节点是根
+        int k;
+        for(k=inL;k<=inR;k++){
+            if(inorder[k]==postorder[postR])
+                break;
+        }
+        int numRight=inR-k;//右子树的节点数量
+        root->left=create(inorder,postorder,inL,k-1,postL,postR-numRight-1);
+        root->right=create(inorder,postorder,k+1,inR,postR-numRight,postR-1);
+        return root;
     }
 };
 ```
