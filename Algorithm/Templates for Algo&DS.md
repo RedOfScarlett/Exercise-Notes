@@ -2348,6 +2348,89 @@ public:
 };
 ```
 
+##### [654. 最大二叉树](https://leetcode.cn/problems/maximum-binary-tree/)
+
+```C++
+//DFS，朴素的分治法
+class Solution {
+public:
+    TreeNode* constructMaximumBinaryTree(vector<int>& nums) {
+        if(nums.empty())
+            return nullptr;
+        return DFS(nums,0,nums.size()-1);
+    }
+
+    TreeNode* DFS(vector<int>& nums,int left,int right){
+        if(left>right)
+            return nullptr;
+        int idxRoot=left;
+        for(int i=left;i<=right;i++)
+            if(nums[idxRoot]<nums[i])
+                idxRoot=i;
+        TreeNode* root=new TreeNode(nums[idxRoot]);
+        root->left=DFS(nums,left,idxRoot-1);
+        root->right=DFS(nums,idxRoot+1,right);
+        return root;
+    }
+};
+
+//单调栈，难以理解
+class Solution {
+public:
+    TreeNode* constructMaximumBinaryTree(vector<int>& nums) {
+        vector<TreeNode*> monost;//降序的单调栈
+        for(int num:nums){
+            TreeNode *node=new TreeNode(num);
+            //这个循环保证子结点<父结点
+            //节点关系其实会被修改多次
+            while(!monost.empty()&&monost.back()->val<num){
+                node->left=monost.back();
+                monost.pop_back();
+            }
+            //循环结束后单调栈仍不空，说明栈顶节点值很大，可做根节点
+            if(!monost.empty())
+                monost.back()->right=node;
+            monost.push_back(node);
+        }
+        return monost.front();
+    }
+};
+
+//还可以线段树，以后再说
+```
+
+##### [889. 根据前序和后序遍历构造二叉树](https://leetcode.cn/problems/construct-binary-tree-from-preorder-and-postorder-traversal/)
+
+```C++
+//理论上来说前、后、层只有和中序才能构造出二叉树
+//但是这题说了无重复值，可以通过找到左右子树的根来实现
+class Solution {
+public:
+    TreeNode* constructFromPrePost(vector<int>& preorder, vector<int>& postorder) {
+        return DFS(preorder,postorder,0,preorder.size()-1,0,postorder.size()-1);
+    }
+
+    TreeNode* DFS(vector<int>& preorder, vector<int>& postorder,int preL,int preR,int postL,int postR){
+        if(preL>preR||postL>postR)
+            return nullptr;
+        TreeNode *root=new TreeNode(preorder[preL]);
+        if(preL==preR)
+            return root;
+        int idx=find(postorder.begin()+postL,postorder.begin()+postR+1,preorder[preL+1])-postorder.begin();//pre[preL+1]就是先序中的root->left,我们需要在postorder中找到它的位置
+        int leftNum=idx-postL+1;
+        root->left=DFS(preorder,postorder,preL+1,preL+leftNum,postL,idx);
+        root->right=DFS(preorder,postorder,preL+leftNum+1,preR,idx+1,postR-1);
+        return root;
+    }
+};
+```
+
+##### [114. 二叉树展开为链表](https://leetcode.cn/problems/flatten-binary-tree-to-linked-list/)
+
+```C++
+
+```
+
 
 
 ## 暴力搜索 DFS/BFS
