@@ -2428,7 +2428,46 @@ public:
 ##### [114. 二叉树展开为链表](https://leetcode.cn/problems/flatten-binary-tree-to-linked-list/)
 
 ```C++
+//递归
+class Solution {
+public:
+    void flatten(TreeNode* root) {
+        if(!root)
+            return;
+        if(root->left)
+            flatten(root->left);
+        if(root->right)
+            flatten(root->right);
+        //以下操作都是对非叶子节点才生效
+        TreeNode *temp=root->right;//摘下右子树
+        root->right=root->left;
+        root->left=nullptr;
+        //把摘下的右孩子放到右分支的末端的右孩子位置
+        while(root->right)
+            root=root->right;
+        root->right=temp;
+    }
+};
 
+//迭代
+class Solution {
+public:
+    void flatten(TreeNode* root) {
+        TreeNode *cur=root;
+        while(cur){
+            if(cur->left){
+                TreeNode *p=cur->left;//摘下左子树
+                //找到右子树的右孩子位置
+                while(p->right)
+                    p=p->right;
+                p->right=cur->right;//将右子树放在左子树的右孩子位置
+                cur->right=cur->left;
+                cur->left=nullptr;
+            }
+            cur=cur->right;//从根节点的右孩子开始下一轮迭代
+        }
+    }
+};
 ```
 
 
