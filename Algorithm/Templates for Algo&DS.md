@@ -2470,6 +2470,198 @@ public:
 };
 ```
 
+##### [116. 填充每个节点的下一个右侧节点指针](https://leetcode.cn/problems/populating-next-right-pointers-in-each-node/)
+
+```C++
+//是一颗完全二叉树
+//层序遍历
+class Solution {
+public:
+    Node* connect(Node* root) {
+        if(!root)
+            return nullptr;
+        queue<Node*> q({root});
+        // q.push(root);
+        while(!q.empty()){
+            int sz=q.size();
+            for(int i=0;i<sz;i++){
+                Node* temp=q.front();
+                q.pop();
+                if(i<sz-1)//这里要注意，每层最后一个元素的next是不需要操作的
+                    temp->next=q.front();
+                if(temp->left)
+                    q.push(temp->left);
+                if(temp->right)
+                    q.push(temp->right);
+            }
+        }
+    return root;
+    } 
+};
+
+//递归
+class Solution {
+public:
+    Node* connect(Node* root) {
+        if(!root)
+            return nullptr;
+        if(root->left)
+            root->left->next=root->right;
+        if(root->right)
+            root->right->next=root->next?root->next->left:nullptr;
+        connect(root->left);
+        connect(root->right);
+        return root;
+    }
+};
+```
+
+##### [117. 填充每个节点的下一个右侧节点指针 II](https://leetcode.cn/problems/populating-next-right-pointers-in-each-node-ii/)
+
+```C++
+//不是完全二叉树了
+//层序遍历，跟上题一模一样
+class Solution {
+public:
+    Node* connect(Node* root) {
+        if(!root)
+            return nullptr;
+        queue<Node*> q({root});
+        // q.push(root);
+        while(!q.empty()){
+            int sz=q.size();
+            for(int i=0;i<sz;i++){
+                Node* temp=q.front();
+                q.pop();
+                if(i<sz-1)//这里要注意，每层最后一个元素的next是不需要操作的
+                    temp->next=q.front();
+                if(temp->left)
+                    q.push(temp->left);
+                if(temp->right)
+                    q.push(temp->right);
+            }
+        }
+    return root;
+    } 
+};
+
+//递归，由于子树有可能残缺，故需要平行扫描父节点同层的节点，找到他们的左右子节点。
+class Solution {
+public:
+    Node* connect(Node* root) {
+        if(!root)
+            return nullptr;
+        Node *p=root->next;
+        while(p){
+            if(p->left){
+                p=p->left;
+                break;
+            }
+            if(p->right){
+                p=p->right;
+                break;
+            }
+            p=p->next;
+        }
+        if(root->right)
+            root->right->next=p;
+        if(root->left)
+            root->left->next=root->right?root->right:p;        
+        connect(root->right);
+        connect(root->left);
+        return root;
+    }
+};
+
+//原地的层序算法
+class Solution {
+public:
+    Node* connect(Node* root) {
+        Node *dummy = new Node(-1), *cur = dummy, *head = root;
+        while (root) {
+            if (root->left) {
+                cur->next = root->left;
+                cur = cur->next;
+            }
+            if (root->right) {
+                cur->next = root->right;
+                cur = cur->next;
+            }
+            root = root->next;
+            if (!root) {
+                cur = dummy;
+                root = dummy->next;
+                dummy->next = NULL;
+            }
+        }
+        return head;
+    }
+};
+```
+
+##### [226. 翻转二叉树](https://leetcode.cn/problems/invert-binary-tree/)
+
+```C++
+//递归前序遍历
+class Solution {
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        if(!root)
+            return nullptr;
+        swap(root->left,root->right);
+        invertTree(root->left);
+        invertTree(root->right);
+        return root;
+    }
+};
+//递归中序
+class Solution {
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        if(!root)
+            return nullptr;
+        invertTree(root->left);
+        swap(root->left,root->right);
+        invertTree(root->left);// 注意 这里依然要遍历左孩子，因为中间节点已经翻转了
+        return root;
+    }
+};
+//递归后序
+class Solution {
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        if(!root)
+            return nullptr;       
+        invertTree(root->left);
+        invertTree(root->right);
+        swap(root->left,root->right);
+        return root;
+    }
+};
+//层序
+class Solution {
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        if(!root)
+            return nullptr;       
+        queue<TreeNode*> q({root});
+        while(!q.empty()){
+            int sz=q.size();
+            for(int i=0;i<sz;i++){
+                TreeNode* temp = q.front();
+                q.pop();
+                swap(temp->left, temp->right); // 节点处理
+                if (temp->left)
+                    q.push(temp->left);
+                if (temp->right)
+                    q.push(temp->right);
+            }
+        }
+        return root;
+    }
+};
+```
+
 
 
 ## 暴力搜索 DFS/BFS
