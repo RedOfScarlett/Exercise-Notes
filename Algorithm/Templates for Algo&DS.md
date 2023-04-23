@@ -2662,6 +2662,34 @@ public:
 };
 ```
 
+## 二叉排序树 BST
+
+### LeetCode
+
+##### [897. 递增顺序搜索树](https://leetcode.cn/problems/increasing-order-search-tree/)
+
+```C++
+//递归
+//利用BST的中序有序性
+//自底向上地让父节点成为其左孩子的右孩子，同时父节点的左孩子置为nullptr
+class Solution {
+public:
+    TreeNode* increasingBST(TreeNode* root) {
+        return DFS(root,nullptr);
+    }
+	//pre用来记录父节点
+    TreeNode* DFS(TreeNode* root,TreeNode* pre){
+        if(!root)
+            return pre;//这里就是将
+        TreeNode *ans=DFS(root->left,root);//最左节点是根节点，在第一层找到它
+        
+        root->left=nullptr;//此时左子树已经捋直了，将root和左子树断开
+        root->right=DFS(root->right,pre);//让父节点成为其左孩子的右孩子
+        return ans;
+    }
+};
+```
+
 
 
 ## 暴力搜索 DFS/BFS
