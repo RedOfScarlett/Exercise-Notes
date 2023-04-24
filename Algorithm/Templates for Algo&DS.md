@@ -2662,6 +2662,84 @@ public:
 };
 ```
 
+##### [222. 完全二叉树的节点个数](https://leetcode.cn/problems/count-complete-tree-nodes/)
+
+```C++
+//简单递归
+class Solution {
+public:
+    int countNodes(TreeNode* root) {
+        return root ? (1 + countNodes(root->left) + countNodes(root->right)) : 0;
+    }
+};
+```
+
+##### [236. 二叉树的最近公共祖先](https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree/)
+
+```C++
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if(root==p||root==q||!root)//边界条件，root是p或q或NULL则立即返回
+		    return root;  
+        TreeNode* left=lowestCommonAncestor(root->left,  p, q);//去左子树中寻找
+        TreeNode* right=lowestCommonAncestor(root->right,  p, q);//去右子树中寻找
+        if(!left&&!right)//以root为根的子树中无p、q，即两个递归都返回了递归边界中root为NULL的情况
+	    	return NULL;
+        else if(left&&!right)//左子树上能找到，但是右子树上找不到，此时就应当直接返回左子树的查找结果
+	    	return left;//返回最近的，所以是返回left
+        else if(right&&!left)//右子树上能找到，但是左子树上找不到，此时就应当直接返回右子树的查找结果
+	    	return right; //返回最近的，所以是返回right
+        return root;//左右子树上均能找到，说明此时的p结点和q结点分居root结点两侧，那么该root就是最近公共祖先
+    }
+};
+```
+
+##### [297. 二叉树的序列化与反序列化](https://leetcode.cn/problems/serialize-and-deserialize-binary-tree/)
+
+```C++
+//先序遍历递归
+class Codec {
+public:
+
+    // Encodes a tree to a single string.
+    string serialize(TreeNode* root) {
+        ostringstream out;
+        serialize(root,out);
+        return out.str();
+    }
+
+    // Decodes your encoded data to tree.
+    TreeNode* deserialize(string data) {
+        istringstream in(data);
+        return deserialize(in);
+    }
+private:
+    void serialize(TreeNode* root,ostringstream& out){
+        if(root){
+            out<<root->val<<" ";
+            serialize(root->left,out);
+            serialize(root->right,out);
+        }else{
+            out<<"# ";
+        }
+    }
+
+    TreeNode* deserialize(istringstream& in){
+        string val;
+        in>>val;
+        if(val=="#")
+            return nullptr;
+        TreeNode *root=new TreeNode(stoi(val));
+        root->left=deserialize(in);
+        root->right=deserialize(in);
+        return root;
+    }
+};
+```
+
+
+
 ## 二叉排序树 BST
 
 ### LeetCode
@@ -2686,6 +2764,74 @@ public:
         root->left=nullptr;//此时左子树已经捋直了，将root和左子树断开
         root->right=DFS(root->right,pre);//让父节点成为其左孩子的右孩子
         return ans;
+    }
+};
+```
+
+##### [235. 二叉搜索树的最近公共祖先](https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-search-tree/)
+
+```C++
+//BST性质，左<根<右
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if(!root)
+            return nullptr;
+        if(root->val>max(p->val,q->val))//当前节点值比p和q都大，说明最近公共祖先在左子树上
+            return lowestCommonAncestor(root->left,p,q);
+        if(root->val<min(p->val,q->val))
+            return lowestCommonAncestor(root->right,p,q);
+        else
+            return root;//root加在p和q之间，返回root
+    }
+};
+```
+
+##### [449. 序列化和反序列化二叉搜索树](https://leetcode.cn/problems/serialize-and-deserialize-bst/)
+
+```C++
+//297的代码可以直接过
+//利用BST 左<根<右 的性质可以避免序列化空指针
+//但是leetcode不支持seekg(),处理流很麻烦，理论上正确的解法如下：
+class Codec {
+public:
+
+    // Encodes a tree to a single string.
+    string serialize(TreeNode* root) {
+        ostringstream out;
+        serialize(root,out);
+        return out.str();
+    }
+
+    // Decodes your encoded data to tree.
+    TreeNode* deserialize(string data) {
+        istringstream in(data);
+        return deserialize(in，INT_MIN,INT_MAX);
+    }
+private:
+    void serialize(TreeNode* root,ostringstream& out){
+        if(root){
+            out<<root->val<<" ";
+            serialize(root->left,out);
+            serialize(root->right,out);
+        }
+    }
+	//将值在闭区间[min,max]中的节点构造出一个二叉树
+    TreeNode* deserialize(istringstream& in,int minVal,int maxVal){
+        if(in.peek()==EOF)
+            return nullptr;
+        auto pos=in.tellg();
+        string val;
+        in>>val;
+        if(stoi(val)>maxVal||stoi(val)<minVal){
+            in.seekg();//恢复流读取位置
+            return nullptr;
+        }  
+        TreeNode *root=new TreeNode(stoi(val));
+        //BST左子树都比根节点小，右子树都比根节点大
+        root->left=deserialize(in,minVal,stoi(val));
+        root->right=deserialize(in,stoi(val),maxVal);
+        return root;
     }
 };
 ```
