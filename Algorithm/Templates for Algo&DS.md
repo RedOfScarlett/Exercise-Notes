@@ -2738,6 +2738,92 @@ private:
 };
 ```
 
+##### [341. 扁平化嵌套列表迭代器](https://leetcode.cn/problems/flatten-nested-list-iterator/)
+
+```C++
+//非递归，使用stack进行迭代,这种做法比较平衡，将压平操作延迟到判断hasNext()时才执行。
+class NestedIterator {
+public:
+    NestedIterator(vector<NestedInteger> &nestedList) {
+        for(int i=nestedList.size()-1;i>=0;--i)
+            st.push(nestedList[i]);
+    }
+    
+    int next() {
+        NestedInteger temp=st.top();
+        st.pop();
+        return temp.getInteger();
+    }
+    
+    bool hasNext() {
+        while(!st.empty()){
+            NestedInteger temp=st.top();
+            if(temp.isInteger())
+                return true;
+            st.pop();
+            for(int i=temp.getList().size()-1;i>=0;i--){
+                st.push(temp.getList()[i]);
+            }
+        }
+        return false;
+    }
+private:
+    stack<NestedInteger> st;
+};
+//递归写法，等价于遍历一颗N叉树
+//头重脚轻，预处理慢但是执行快。
+class NestedIterator {
+public:
+    NestedIterator(vector<NestedInteger> &nestedList) {
+        make_queue(nestedList);
+    }
+
+    int next() {
+        int t = q.front(); q.pop();
+        return t; 
+    }
+
+    bool hasNext() {
+        return !q.empty();
+    }
+    
+private:
+    queue<int> q;
+    void make_queue(vector<NestedInteger> &nestedList) {
+        for (auto a : nestedList) {
+            if (a.isInteger()) q.push(a.getInteger());
+            else make_queue(a.getList());
+        }
+    }
+};
+```
+
+##### [124. 二叉树中的最大路径和](https://leetcode.cn/problems/binary-tree-maximum-path-sum/)
+
+```C++
+//题目中说最大路径不一定经过根节点，但是对于二叉树来说，只有根节点一个节点连接左右子树
+//因此想到二分（其实就是递归的树形DP）
+class Solution {
+public:
+    int maxPathSum(TreeNode* root) {
+        int ans=INT_MIN;
+        oneSideMax(root,ans);
+        return ans;
+    }
+
+    int oneSideMax(TreeNode* root,int& ans){
+        if(!root)
+            return 0;
+        int leftMax=max(0,oneSideMax(root->left,ans));//因为val可能是负的，所以这里要跟0比较
+        int rightMax=max(0,oneSideMax(root->right,ans));
+        ans=max(ans,leftMax+rightMax+root->val);
+        return max(leftMax,rightMax)+root->val;
+    }
+};
+
+
+```
+
 
 
 ## 二叉排序树 BST
