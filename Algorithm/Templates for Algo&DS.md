@@ -2695,6 +2695,15 @@ public:
 };
 ```
 
+##### [1644. 二叉树的最近公共祖先 II](https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree-ii/)
+
+```C++
+//这题与上一题的区别在于，p或q可能不存在
+
+```
+
+
+
 ##### [297. 二叉树的序列化与反序列化](https://leetcode.cn/problems/serialize-and-deserialize-binary-tree/)
 
 ```C++
