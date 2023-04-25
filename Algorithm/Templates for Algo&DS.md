@@ -1396,6 +1396,34 @@ H(key)=key%p,p为小于等于表长的最大素数
 
 将映射到同一位置的不同关键字存储在一个线性链表中。有点像邻接表。	 
 
+## 数组
+
+### LeetCode
+
+##### [228. 汇总区间](https://leetcode.cn/problems/summary-ranges/)
+
+```C++
+//遍历一遍数组，每次检查下一个数是不是递增的
+class Solution {
+public:
+    vector<string> summaryRanges(vector<int>& nums) {
+        vector<string> res;
+        int i = 0;
+        int sz = nums.size();
+        while (i < n) {
+            int j = 1;
+            while (i + j < n && (long)nums[i + j] - nums[i] == j)
+                ++j;
+            res.push_back(j <= 1 ? to_string(nums[i]) : to_string(nums[i]) + "->" + to_string(nums[i + j - 1]));
+            i += j;
+        }
+        return res;
+    }
+};
+```
+
+
+
 ## 链表
 
 #### 双指针
@@ -2699,7 +2727,98 @@ public:
 
 ```C++
 //这题与上一题的区别在于，p或q可能不存在
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        DFS(root, p, q);
+        return ans;
+    }
 
+private:
+    TreeNode* ans;
+    // 返回以 root 为根的子树是否包含 节点 p 或者 q;
+    bool DFS(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if (root == nullptr)
+            return false;
+        bool left = DFS(root->left, p, q);
+        bool right = DFS(root->right, p, q);
+        // 两个子树分别包含q 或者 q; 左p右q 或者 左q右p;
+        if (left && right) 
+            ans = root;
+        // 当根就是 p q之一时，且在左右子树中找到了另外一个节点;
+        if ((root == p || root == q) && (left || right))
+            ans = root;
+        // 当根就是 p q之一时，或在左右子树中找到了其中一个节点，就返回true;
+        return (root == p) || (root == q) || left || right;
+    }
+};
+```
+
+##### [1650. 二叉树的最近公共祖先 III](https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree-iii/)
+
+```C++
+//子节点有指向父节点的指针了
+//记录路径的做法
+class Solution {
+public:
+    Node* lowestCommonAncestor(Node* p, Node * q) {
+        set<Node*> hash;
+        while(p){
+            hash.insert(p);
+            p=p->parent;
+        }
+        while(q){
+            if(hash.count(q))
+                return q;
+            q=q->parent;
+        }
+        return nullptr;
+    }
+};
+
+//转化为求链表相交节点的思路
+class Solution {
+public:
+    Node* lowestCommonAncestor(Node* p, Node * q) {
+        Node *tempP = p;
+        Node *tempQ = q;
+        //一个节点达到根节点，则跳到另一个给定的节点。
+        //假设[p，交点)长度为L1，[q,交点)长度为L2，[交点，根]长度为L3，那么p将走L1+L3+L2，q将走L2+L1+L3，最终在交点处相遇
+        while(tempP != tempQ){
+            tempP = tempP == nullptr ? q : tempP->parent;
+            tempQ = tempQ == nullptr ? p : tempQ->parent;
+        }
+        return tempP;
+    }
+};
+```
+
+##### [1676. 二叉树的最近公共祖先 IV](https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree-iv/)
+
+```C++
+//自顶向下找到所有备选的LCA
+//在找到最下层的属于nodes的节点后（单个节点的LCA是自己），逐层向上用备选的LCA来更新左右子树的LCA。
+class Solution
+{
+public:
+    TreeNode *lowestCommonAncestor(TreeNode *root, vector<TreeNode *> &nodes)
+    {
+        if (!root)
+            return nullptr;
+        //如果root属于nodes ,root可能为其最近公共祖先（树的先序遍历）
+        if(count(nodes.begin(),nodes.end(),root))
+            return root;
+        TreeNode *left = lowestCommonAncestor(root->left, nodes);
+        TreeNode *right = lowestCommonAncestor(root->right, nodes);
+        if (!left)//左子树没有节点属于nodes，则右子树的LCA就是nodes的LCA
+            return right;
+        if (!right)
+            return left;
+        return root;
+    }
+};
+
+//并查集
 ```
 
 
@@ -3616,6 +3735,46 @@ public:
 };
 
 //A*搜索
+```
+
+##### [399. 除法求值](https://leetcode.cn/problems/evaluate-division/)
+
+```C++
+//借助哈希表进行递归DFS
+class Solution {
+public:
+    vector<double> calcEquation(vector<vector<string>>& equations, vector<double>& values, vector<vector<string>>& queries) {
+        vector<double> ans;
+        //将a/b和b/a都记录在哈希表中
+        for (int i = 0; i < equations.size(); ++i) {
+            m[equations[i][0]][equations[i][1]] = values[i];
+            m[equations[i][1]][equations[i][0]] = 1.0 / values[i];
+        }
+        for (auto query : queries) {
+            unordered_set<string> visited;//记录访问过的操作数
+            double t = DFS(query[0], query[1], visited);
+            ans.push_back((t > 0.0) ? t : -1);
+        }
+        return ans;
+    }
+    double DFS(string op1, string op2, unordered_set<string>& visited) {
+        if (m[op1].count(op2)) 
+            return m[op1][op2];
+        for (auto a : m[op1]) {
+            if (visited.count(a.first))
+                continue;
+            visited.insert(a.first);
+            //递归找到一条路径
+            double t = DFS(a.first, op2, visited);
+            if (t > 0.0) 
+                return t * a.second;
+        }
+        return -1.0;
+    }
+
+private:
+    unordered_map<string, unordered_map<string, double>> m;//"a"/"b"=c
+};
 ```
 
 
